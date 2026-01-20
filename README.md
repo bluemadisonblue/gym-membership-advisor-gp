@@ -1,6 +1,6 @@
-## IY470 Gym Membership Demo (uGym & Power Zone)
+## IY470 Gym Membership Advisor (uGym & Power Zone)
 
-This is a small Flask web application for the IY470 Web Programming group project.  
+A modern Flask web application for the IY470 Web Programming group project.  
 It compares two gyms, **uGym** and **Power Zone**, and recommends the cheapest option
 for a user based on their age, student status, and selected facilities.
 
@@ -9,11 +9,11 @@ it is easy to plug in SQLAlchemy models later.
 
 ---
 
-### Features
+### ✨ Features
 
 - **Two gyms**: uGym and Power Zone, each with joining fees and different price tables.
 - **Age restrictions**: users under 16 cannot sign up.
-- **Discount rules**:
+- **Smart discount rules**:
   - Students and young adults (age \< 25):
     - uGym: 20% discount
     - Power Zone: 15% discount
@@ -21,7 +21,7 @@ it is easy to plug in SQLAlchemy models later.
     - uGym: 15% discount
     - Power Zone: 20% discount
   - Discounts never apply to massage therapy or physiotherapy.
-- **Membership flow**:
+- **Guided membership flow**:
   - Home → Sign up (collects personal details)
   - Preferences (choose gym times and add-ons)
   - Recommendation (side‑by‑side cost breakdown and recommended gym)
@@ -32,84 +32,124 @@ it is easy to plug in SQLAlchemy models later.
 - **In-memory membership store**:
   - Unique, human-friendly membership IDs such as `UG-2026-000001`.
   - Stored in a global Python dictionary for the duration of the process.
-- **Responsive UI** using plain CSS, semantic HTML, and Jinja templates.
+- **Modern UI/UX**:
+  - Tailwind CSS framework for responsive, mobile-first design
+  - Step indicator for multi-page signup flow
+  - Smooth animations and transitions
+  - Image gallery showcasing gym facilities
+  - Embedded video preview on preferences page
+  - Premium form inputs with clear validation
+  - Toast notifications for user feedback
+  - Accessible design with semantic HTML
 
 ---
 
-### Project structure
+### 📁 Project structure
 
-- `app.py` — Flask application, routes, and in-memory membership store.
-- `data.py` — Static membership option tables and discount constants.
-- `pricing.py` — Pricing and discount calculation logic using `decimal.Decimal`.
-- `templates/base.html` — Base layout with navigation and flash messages.
-- `templates/home.html` — Landing page with project overview and main actions.
-- `templates/signup.html` — Signup form (name, age, student status).
-- `templates/preferences.html` — Membership components: gym time band & add‑ons.
-- `templates/recommendation.html` — Side‑by‑side pricing and recommendation.
-- `templates/confirm.html` — Final selection review and “Pay” button.
-- `templates/pay.html` — Simulated payment confirmation and “Create Membership”.
-- `templates/success.html` — Membership ID and summary after creation.
-- `templates/access.html` — Form to enter membership ID.
-- `templates/membership_details.html` — Detailed view of a stored membership.
-- `static/styles.css` — Responsive, accessible styling (no JS frameworks).
+```
+webdev group project/
+├── app.py                          # Flask application, routes, and session management
+├── data.py                         # Static gym data, pricing tables, and discount constants
+├── pricing.py                      # Pricing calculation logic using decimal.Decimal
+├── README.md                       # This file
+├── templates/
+│   ├── base.html                  # Base layout with navigation, step indicator, and flash messages
+│   ├── home.html                  # Landing page with hero section, image gallery, and features
+│   ├── signup.html                # Step 1: Personal details form (name, age, student status)
+│   ├── preferences.html           # Step 2: Membership preferences with embedded video preview
+│   ├── recommendation.html        # Step 3: Side-by-side pricing comparison and recommendation
+│   ├── confirm.html               # Step 4: Final review with detailed pricing breakdown
+│   ├── pay.html                   # Step 5: Simulated payment page
+│   ├── success.html               # Success page with copyable membership ID
+│   ├── access.html                # Form to retrieve membership by ID
+│   └── membership_details.html    # Detailed view of stored membership
+└── static/
+    ├── styles.css                 # Custom CSS animations and utilities
+    ├── images/
+    │   ├── 1.jpg                  # Gym facility image (desktop/laptop view)
+    │   ├── 2.jpg                  # Mobile app mockup
+    │   ├── 3.jpg                  # Gym equipment/products
+    │   └── 4.jpg                  # Additional gym experience photo
+    └── videos/
+        └── swimming pool.mp4      # Swimming pool facilities video
+```
 
 ---
 
-### Requirements
+### 📋 Requirements
 
-- Python 3.10+ (recommended)
-- Flask (installed via `pip`)
+- **Python 3.9+** (Python 3.10+ recommended)
+- **Flask** (installed via `pip`)
+- **Tailwind CSS** (loaded via CDN, no installation required)
 
-No other third‑party libraries are required.
+No other third‑party libraries or build tools are required.
 
 ---
 
-### How to run
+### 🚀 How to run
 
-1. **Create and activate a virtual environment (recommended)**
+1. **Clone the repository**
 
    ```bash
-   cd "webdev group project"
-   python -m venv .venv
+   git clone git@github.com:bluemadisonblue/gym-membership-advisor-gp.git
+   cd gym-membership-advisor-gp
+   ```
+
+2. **Create and activate a virtual environment (recommended)**
+
+   ```bash
+   python3 -m venv .venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    ```
 
-2. **Install Flask**
+3. **Install Flask**
 
    ```bash
    pip install Flask
    ```
 
-3. **Run the app**
+4. **Run the app**
 
    ```bash
-   python app.py
+   python3 app.py
    ```
 
-4. **Open in browser**
+5. **Open in browser**
 
    Visit `http://127.0.0.1:5000/` in your browser.
 
+   **Note**: Make sure to include the port number (`:5000`) in the URL.
+
 ---
 
-### Implementation notes
+### 🔧 Implementation notes
 
 - **No database**:
   - Memberships are stored in a global in‑memory dict in `app.py` keyed by `membership_id`.
   - Restarting the server clears all memberships.
+  - Data persists only for the duration of the server process.
+
 - **Money handling**:
   - Prices and discounts are stored as `decimal.Decimal` values in `data.py`.
   - All rounding is to 2 decimal places (banking‑style) in `pricing.py`.
   - Templates use a helper `format_currency` to display values as `£xx.xx`.
+
 - **Separation of concerns**:
   - `data.py` holds all price tables and discount definitions.
   - `pricing.py` contains pure functions for calculating totals and recommendations.
   - `app.py` handles request flow, sessions, and user feedback (via `flash`).
+
 - **Session flow**:
   - `/signup` saves personal details into `session["signup"]`.
   - `/preferences` saves preference choices into `session["preferences"]`.
   - `/recommendation` and `/confirm` compute pricing from those structures.
   - `/pay` simulates payment and, on POST, creates and stores the membership.
+
+- **Frontend**:
+  - Tailwind CSS loaded via CDN for rapid UI development.
+  - Custom CSS animations in `static/styles.css` for fade-in effects and hover states.
+  - Vanilla JavaScript for interactive features (clipboard copy, form validation, video controls).
+  - Fully responsive design tested on mobile, tablet, and desktop viewports.
 
 ---
 
@@ -154,10 +194,73 @@ Use these scenarios to manually verify the business rules and UI:
 
 ---
 
-### Future extensions
+### 🎯 Future extensions
 
-- Replace the in‑memory membership store with a proper database (e.g. PostgreSQL) using SQLAlchemy models.
-- Persist price tables in the database and add an admin interface for editing them.
-- Add authentication for staff and members.
-- Add automated tests for pricing logic (unit tests around `pricing.calculate_pricing_for_selection`).
+- **Database integration**:
+  - Replace the in‑memory membership store with a proper database (e.g. PostgreSQL) using SQLAlchemy models.
+  - Persist price tables in the database and add an admin interface for editing them.
+
+- **Authentication & authorization**:
+  - Add user authentication for members and staff.
+  - Implement role-based access control (member vs. admin).
+
+- **Testing**:
+  - Add automated unit tests for pricing logic (around `pricing.calculate_pricing_for_selection`).
+  - Add integration tests for the full signup flow.
+  - Add end-to-end tests using Selenium or Playwright.
+
+- **Enhanced features**:
+  - Email confirmation on membership creation.
+  - PDF generation for membership cards.
+  - Payment integration with Stripe or PayPal.
+  - Member dashboard with usage statistics.
+  - Admin panel for managing memberships and pricing.
+
+- **Performance**:
+  - Optimize image loading (lazy loading, WebP format).
+  - Consider using Git LFS for video files.
+  - Add caching for static assets.
+
+---
+
+### 📝 Recent Updates
+
+**January 2026**:
+- ✅ Added Tailwind CSS for modern UI/UX design
+- ✅ Implemented step indicator for signup flow
+- ✅ Added image gallery to homepage with 4 gym photos
+- ✅ Embedded swimming pool video on preferences page
+- ✅ Enhanced all pages with animations and smooth transitions
+- ✅ Improved pricing breakdown tables with better visual hierarchy
+- ✅ Added clipboard copy functionality for membership IDs
+- ✅ Redesigned all forms with premium styling
+- ✅ Improved accessibility and mobile responsiveness
+
+---
+
+### 👥 Contributing
+
+This is a group project for IY470 Web Programming. To contribute:
+
+1. **Clone the repository**
+2. **Create a new branch** for your feature:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+3. **Make your changes** and commit:
+   ```bash
+   git add .
+   git commit -m "Add your feature description"
+   ```
+4. **Push to GitHub**:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+5. **Create a Pull Request** on GitHub for review
+
+---
+
+### 📄 License
+
+This project is for educational purposes as part of the IY470 Web Programming course.
 
