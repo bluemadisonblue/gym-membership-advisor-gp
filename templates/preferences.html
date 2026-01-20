@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Preferences{% endblock %}
+
+{% block content %}
+<h1>Choose your membership preferences</h1>
+<p class="subtle">
+    Pick what you want, and we’ll price it for both gyms using the correct “with gym” or “without gym” add-on rules.
+</p>
+
+<form method="post" class="form-card form-narrow" novalidate>
+    <fieldset class="form-group fieldset-card">
+        <legend>Gym membership</legend>
+        <div class="radio-group">
+            <label class="radio-card">
+                <input type="radio" name="wants_gym" value="yes"
+                       {% if wants_gym == 'yes' %}checked{% endif %}>
+                <span>
+                    <strong>I want a gym membership</strong>
+                    <span class="hint">Choose a time band below.</span>
+                </span>
+            </label>
+            <label class="radio-card">
+                <input type="radio" name="wants_gym" value="no"
+                       {% if wants_gym != 'yes' %}checked{% endif %}>
+                <span>
+                    <strong>Add-ons only</strong>
+                    <span class="hint">No gym plan; add-ons priced without gym membership.</span>
+                </span>
+            </label>
+        </div>
+
+        <div class="form-group">
+            <label for="gym_band">If you selected a gym membership, pick a time band</label>
+            <select class="input" id="gym_band" name="gym_band">
+                <option value="">-- Select time band --</option>
+                <option value="super_off_peak" {% if gym_band == 'super_off_peak' %}selected{% endif %}>
+                    Super off-peak (10-12 &amp; 2-4)
+                </option>
+                <option value="off_peak" {% if gym_band == 'off_peak' %}selected{% endif %}>
+                    Off-peak (12-2 &amp; 8-11)
+                </option>
+                <option value="anytime" {% if gym_band == 'anytime' %}selected{% endif %}>
+                    Anytime
+                </option>
+            </select>
+            <small class="hint">
+                Leave blank if you chose not to have a gym membership; otherwise this is required.
+            </small>
+        </div>
+    </fieldset>
+
+    <fieldset class="form-group fieldset-card">
+        <legend>Add-ons</legend>
+        <p class="hint">
+            Add-ons are priced differently depending on whether you have a gym membership.
+            We will automatically use the correct price ("with gym membership" or "without gym membership")
+            based on your choice above.
+        </p>
+
+        <div class="checkbox-grid">
+            <label class="checkbox-card">
+                <input type="checkbox" name="swim" value="1" {% if add_swim %}checked{% endif %}>
+                <span><strong>Swimming pool</strong></span>
+            </label>
+            <label class="checkbox-card">
+                <input type="checkbox" name="classes" value="1" {% if add_classes %}checked{% endif %}>
+                <span><strong>Classes</strong></span>
+            </label>
+            <label class="checkbox-card">
+                <input type="checkbox" name="massage" value="1" {% if add_massage %}checked{% endif %}>
+                <span><strong>Massage therapy</strong></span>
+            </label>
+            <label class="checkbox-card">
+                <input type="checkbox" name="physio" value="1" {% if add_physio %}checked{% endif %}>
+                <span><strong>Physiotherapy</strong></span>
+            </label>
+        </div>
+    </fieldset>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">See recommendation</button>
+    </div>
+</form>
+{% endblock %}
+

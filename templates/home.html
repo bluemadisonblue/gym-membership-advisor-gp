@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+<section class="hero hero-split">
+    <div class="hero-text">
+        <p class="eyebrow">IY470 group project · Gym membership advisor</p>
+        <h1>Let us find the smarter gym deal for you</h1>
+        <p>
+            Answer a few quick questions and we will price your choices at
+            <strong>uGym</strong> and <strong>Power Zone</strong>, apply all valid
+            discounts, and highlight the option that saves you the most every month.
+        </p>
+        <div class="hero-actions">
+            <a class="btn btn-primary" href="{{ url_for('signup') }}">Start sign up</a>
+            <a class="btn btn-secondary" href="{{ url_for('access') }}">I already have an ID</a>
+        </div>
+        <p class="hero-footnote">
+            No real payment is taken — this is a coursework demo that simulates the payment step.
+        </p>
+    </div>
+    <div class="hero-panel">
+        <div class="hero-card">
+            <div class="hero-gyms">
+                <span class="hero-gym hero-gym-ugym">uGym</span>
+                <span class="hero-vs">vs</span>
+                <span class="hero-gym hero-gym-pz">Power Zone</span>
+            </div>
+            <p class="hero-summary">
+                Side‑by‑side pricing, automatic discounts, and a clear monthly recommendation.
+            </p>
+            <ul class="hero-list">
+                <li>Age and student rules enforced (16+ only)</li>
+                <li>Student / young adult / pensioner discounts applied</li>
+                <li>Massage &amp; physio correctly excluded from discounts</li>
+                <li>Transparent breakdown with joining fees shown separately</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="info-grid">
+    <article class="card">
+        <h2>How it works</h2>
+        <ol class="steps-list">
+            <li><strong>1. Sign up:</strong> Tell us your name, age, and whether you are a student.</li>
+            <li><strong>2. Choose preferences:</strong> Pick a gym time band and add-ons you care about.</li>
+            <li><strong>3. Compare gyms:</strong> We compute monthly costs for both gyms and recommend one.</li>
+            <li><strong>4. Confirm &amp; “pay”:</strong> Simulate payment and receive your membership ID.</li>
+        </ol>
+    </article>
+    <article class="card">
+        <h2>Why this site?</h2>
+        <p>
+            This project demonstrates a complete Flask application with clean pricing logic,
+            in-memory storage, and a responsive, accessible interface — designed to be easy
+            to extend with a real database later.
+        </p>
+        <p class="hint">
+            All membership options and discounts come directly from the coursework brief and are
+            applied consistently for both gyms.
+        </p>
+    </article>
+</section>
+{% endblock %}
+

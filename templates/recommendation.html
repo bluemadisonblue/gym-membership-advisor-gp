@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Recommendation{% endblock %}
+
+{% block content %}
+<h1>Membership recommendation</h1>
+
+<p>
+    Based on your age and preferences, we calculated the monthly cost for both gyms.
+    The recommended option is highlighted below.
+</p>
+
+{% if pricing.recommended_savings_per_month and pricing.recommended_savings_per_month > 0 %}
+    <div class="callout callout-success" role="status" aria-live="polite">
+        <strong>Best value:</strong>
+        {{ pricing.gyms[recommended_gym].gym_name }} is cheaper by
+        <strong>{{ format_currency(pricing.recommended_savings_per_month) }}/month</strong>
+        compared to {{ pricing.gyms[pricing.recommended_vs].gym_name }} for your selections.
+    </div>
+{% endif %}
+
+<div class="cards-grid two-columns">
+    {% for gym_key, gym_data in pricing.gyms.items() %}
+        {% set is_recommended = (gym_key == recommended_gym) %}
+        <article class="card {% if is_recommended %}card-highlight card-highlight-recommended{% endif %}">
+            <header class="card-header">
+                <h2>{{ gym_data.gym_name }}</h2>
+                {% if is_recommended %}
+                    <span class="badge badge-recommended">Recommended</span>
+                {% endif %}
+            </header>
+            <div class="card-body">
+                <div class="table-wrap" role="region" aria-label="{{ gym_data.gym_name }} pricing breakdown">
+                    <table class="pricing-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Item</th>
+                                <th scope="col">Context</th>
+                                <th scope="col" class="num">Price</th>
+                                <th scope="col" class="num">Discount</th>
+                                <th scope="col" class="num">Final</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if gym_data.wants_gym %}
+                                <tr>
+                                    <th scope="row">{{ gym_data.gym_plan_label }}</th>
+                                    <td>Gym membership</td>
+                                    <td class="num">{{ format_currency(gym_data.base_gym_price) }}</td>
+                                    <td class="num">
+                                        {% if gym_data.base_discount > 0 %}
+                                            -{{ format_currency(gym_data.base_discount) }}
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+                                    <td class="num">{{ format_currency(gym_data.base_final) }}</td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <th scope="row">Gym membership</th>
+                                    <td>Not selected</td>
+                                    <td class="num">£0.00</td>
+                                    <td class="num">—</td>
+                                    <td class="num">£0.00</td>
+                                </tr>
+                            {% endif %}
+
+                            {% if gym_data.addons %}
+                                {% for addon in gym_data.addons %}
+                                    <tr>
+                                        <th scope="row">{{ addon.label }}</th>
+                                        <td>{{ addon.context }}</td>
+                                        <td class="num">{{ format_currency(addon.price) }}</td>
+                                        <td class="num">
+                                            {% if addon.discount_applied %}
+                                                -{{ format_currency(addon.discount) }}
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+                                        <td class="num">{{ format_currency(addon.final_price) }}</td>
+                                    </tr>
+                                {% endfor %}
+                            {% endif %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th scope="row" colspan="2">Monthly subtotal (before discounts)</th>
+                                <td class="num">{{ format_currency(gym_data.monthly_total_before_discount) }}</td>
+                                <td class="num">—</td>
+                                <td class="num">—</td>
+                            </tr>
+                            <tr>
+                                <th scope="row" colspan="2">Total discount applied</th>
+                                <td class="num">—</td>
+                                <td class="num">-{{ format_currency(gym_data.discount_total) }}</td>
+                                <td class="num">—</td>
+                            </tr>
+                            <tr class="tfoot-strong">
+                                <th scope="row" colspan="2">Monthly total (after discounts)</th>
+                                <td class="num">—</td>
+                                <td class="num">—</td>
+                                <td class="num">{{ format_currency(gym_data.monthly_total_after_discount) }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="summary-lines">
+                    <div class="summary-strong">
+                        <span>Monthly total (after discounts)</span>
+                        <span>{{ format_currency(gym_data.monthly_total_after_discount) }}</span>
+                    </div>
+                    <div>
+                        <span>One-off joining fee</span>
+                        <span>{{ format_currency(gym_data.joining_fee) }}</span>
+                    </div>
+                </div>
+            </div>
+        </article>
+    {% endfor %}
+</div>
+
+<form method="post" class="form-card choose-gym">
+    <h2>Choose your gym to continue</h2>
+    <p class="hint">
+        We recommend <strong>{{ pricing.gyms[recommended_gym].gym_name }}</strong>, but you can
+        select either option below.
+    </p>
+    <div class="radio-group">
+        {% for gym_key, gym_data in pricing.gyms.items() %}
+            <label>
+                <input type="radio" name="chosen_gym" value="{{ gym_key }}"
+                       {% if chosen_gym == gym_key %}checked{% endif %}>
+                {{ gym_data.gym_name }} — {{ format_currency(gym_data.monthly_total_after_discount) }}/month
+            </label>
+        {% endfor %}
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Continue to confirmation</button>
+    </div>
+</form>
+{% endblock %}
+

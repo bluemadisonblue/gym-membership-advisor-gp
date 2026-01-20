@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Payment{% endblock %}
+
+{% block content %}
+<h1>Payment confirmation</h1>
+
+<p>
+    This is a simulated payment step. No real money is taken.
+    Review your final cost below and click <strong>Create Membership</strong> to finish.
+    Your membership ID will be generated on the next screen.
+    </p>
+
+<article class="card">
+    <header class="card-header">
+        <h2>{{ chosen_pricing.gym_name }}</h2>
+    </header>
+    <div class="card-body">
+        <div class="summary-lines">
+            <div>
+                <span>Monthly total (after discounts)</span>
+                <span>{{ format_currency(chosen_pricing.monthly_total_after_discount) }}</span>
+            </div>
+            <div>
+                <span>One-off joining fee</span>
+                <span>{{ format_currency(chosen_pricing.joining_fee) }}</span>
+            </div>
+        </div>
+    </div>
+</article>
+
+<form method="post" class="form-card">
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Create Membership</button>
+    </div>
+</form>
+{% endblock %}
+

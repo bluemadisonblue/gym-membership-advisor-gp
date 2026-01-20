@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Gym Membership{% endblock %} - IY470</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+<header class="site-header">
+    <div class="container header-content">
+        <div class="logo">
+            <span class="logo-main">uGym &amp; Power Zone</span>
+            <span class="logo-sub">Membership portal</span>
+        </div>
+        <nav class="nav">
+            <a href="{{ url_for('home') }}" class="{% if request.endpoint == 'home' %}nav-active{% endif %}">Home</a>
+            <a href="{{ url_for('signup') }}" class="{% if request.endpoint in ['signup','preferences','recommendation','confirm','pay'] %}nav-active{% endif %}">Sign Up</a>
+            <a href="{{ url_for('access') }}" class="{% if request.endpoint in ['access','membership_details'] %}nav-active{% endif %}">Access Membership</a>
+        </nav>
+    </div>
+</header>
+
+<main class="site-main">
+    <div class="container">
+        {# Step indicator for the signup → payment flow (no JS) #}
+        {% set step = 0 %}
+        {% if request.endpoint == 'signup' %}
+            {% set step = 1 %}
+        {% elif request.endpoint == 'preferences' %}
+            {% set step = 2 %}
+        {% elif request.endpoint == 'recommendation' %}
+            {% set step = 3 %}
+        {% elif request.endpoint == 'confirm' %}
+            {% set step = 4 %}
+        {% elif request.endpoint == 'pay' %}
+            {% set step = 5 %}
+        {% endif %}
+
+        {% if step > 0 %}
+            <nav class="stepper" aria-label="Signup progress">
+                <ol class="stepper-list">
+                    <li class="stepper-item {% if step >= 1 %}is-done{% endif %} {% if step == 1 %}is-active{% endif %}">
+                        <span class="stepper-dot" aria-hidden="true"></span>
+                        <span class="stepper-label">Signup</span>
+                    </li>
+                    <li class="stepper-item {% if step >= 2 %}is-done{% endif %} {% if step == 2 %}is-active{% endif %}">
+                        <span class="stepper-dot" aria-hidden="true"></span>
+                        <span class="stepper-label">Preferences</span>
+                    </li>
+                    <li class="stepper-item {% if step >= 3 %}is-done{% endif %} {% if step == 3 %}is-active{% endif %}">
+                        <span class="stepper-dot" aria-hidden="true"></span>
+                        <span class="stepper-label">Compare</span>
+                    </li>
+                    <li class="stepper-item {% if step >= 4 %}is-done{% endif %} {% if step == 4 %}is-active{% endif %}">
+                        <span class="stepper-dot" aria-hidden="true"></span>
+                        <span class="stepper-label">Confirm</span>
+                    </li>
+                    <li class="stepper-item {% if step >= 5 %}is-done{% endif %} {% if step == 5 %}is-active{% endif %}">
+                        <span class="stepper-dot" aria-hidden="true"></span>
+                        <span class="stepper-label">Pay</span>
+                    </li>
+                </ol>
+            </nav>
+        {% endif %}
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container" aria-live="polite">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+</main>
+
+<footer class="site-footer">
+    <div class="container">
+        <p>&copy; {{ 2026 }} IY470 Web Programming — uGym &amp; Power Zone membership demo.</p>
+    </div>
+</footer>
+</body>
+</html>
+

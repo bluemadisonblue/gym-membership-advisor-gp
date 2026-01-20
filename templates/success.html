@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Success{% endblock %}
+
+{% block content %}
+<h1>Membership created</h1>
+
+<article class="card">
+    <header class="card-header">
+        <h2>Welcome, {{ membership.signup.full_name }}!</h2>
+    </header>
+    <div class="card-body">
+        <p>
+            Your membership has been created successfully for
+            <strong>{{ membership.pricing.gym_name }}</strong>.
+        </p>
+
+        <p class="membership-id">
+            <strong>Your membership ID:</strong>
+            <span class="code">{{ membership.membership_id }}</span>
+        </p>
+
+        <p>
+            Keep this ID safe. You can use it at any time to access your membership details on this site.
+        </p>
+
+        <div class="summary-lines">
+            <div>
+                <span>Monthly total (after discounts)</span>
+                <span>{{ format_currency(membership.pricing.monthly_total_after_discount) }}</span>
+            </div>
+            <div>
+                <span>One-off joining fee</span>
+                <span>{{ format_currency(membership.pricing.joining_fee) }}</span>
+            </div>
+        </div>
+    </div>
+</article>
+
+<div class="form-actions">
+    <a class="btn btn-primary" href="{{ url_for('access') }}">Access membership</a>
+    <a class="btn btn-secondary" href="{{ url_for('home') }}">Back to home</a>
+</div>
+{% endblock %}
+

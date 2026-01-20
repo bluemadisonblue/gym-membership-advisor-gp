@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Membership Details{% endblock %}
+
+{% block content %}
+<h1>Membership details</h1>
+
+<article class="card">
+    <header class="card-header">
+        <h2>{{ membership.signup.full_name }}</h2>
+        <span class="badge badge-muted">{{ membership.membership_id }}</span>
+    </header>
+    <div class="card-body">
+        <p>
+            <strong>Gym:</strong> {{ membership.pricing.gym_name }}<br>
+            <strong>Age:</strong> {{ membership.signup.age }}{% if membership.signup.is_student %} (student){% endif %}
+        </p>
+
+        {% if membership.pricing.wants_gym %}
+            <p>
+                <strong>Gym plan:</strong>
+                {{ membership.pricing.gym_plan_label }}
+            </p>
+        {% else %}
+            <p><strong>No gym membership selected.</strong></p>
+        {% endif %}
+
+        {% if membership.pricing.addons %}
+            <h3>Add-ons</h3>
+            <ul class="addons-list">
+                {% for addon in membership.pricing.addons %}
+                    <li>
+                        <span class="addon-name">{{ addon.label }}</span>
+                        <span class="addon-context">{{ addon.context }}</span>
+                        <span class="addon-final">
+                            {{ format_currency(addon.final_price) }}
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p><em>No add-ons included in this membership.</em></p>
+        {% endif %}
+
+        <div class="summary-lines">
+            <div>
+                <span>Monthly total (after discounts)</span>
+                <span>{{ format_currency(membership.pricing.monthly_total_after_discount) }}</span>
+            </div>
+            <div>
+                <span>One-off joining fee</span>
+                <span>{{ format_currency(membership.pricing.joining_fee) }}</span>
+            </div>
+        </div>
+    </div>
+</article>
+
+<div class="form-actions">
+    <a class="btn btn-secondary" href="{{ url_for('home') }}">Back to home</a>
+</div>
+{% endblock %}
+

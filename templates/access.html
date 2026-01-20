@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Access Membership{% endblock %}
+
+{% block content %}
+<h1>Access your membership</h1>
+<p class="subtle">Enter your membership ID to view your saved membership details.</p>
+
+<form method="post" class="form-card form-narrow" novalidate>
+    <div class="form-group">
+        <label for="membership_id">Membership ID</label>
+        <input class="input" type="text" id="membership_id" name="membership_id" required
+               autocomplete="off" autocapitalize="characters" spellcheck="false"
+               placeholder="e.g. UG-2026-000123">
+        <small class="hint">
+            Enter the membership ID you received on the success page. It is case sensitive.
+        </small>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">View details</button>
+    </div>
+</form>
+{% endblock %}
+

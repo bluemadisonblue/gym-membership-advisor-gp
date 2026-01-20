@@ -1,0 +1,341 @@
+from decimal import Decimal
+from datetime import datetime
+import itertools
+
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    session,
+)
+
+from data import GYMS
+from pricing import calculate_pricing_for_selection, format_currency
+
+
+app = Flask(__name__)
+app.secret_key = "dev-secret-key-change-me"  # In production, load from environment
+
+
+# In-memory membership store (no database for now)
+MEMBERSHIPS = {}
+MEMBERSHIP_COUNTER = itertools.count(1)
+
+
+def generate_membership_id(gym_key: str) -> str:
+    """
+    Generate a human-friendly membership ID.
+
+    Example: UG-2026-000123 or PZ-2026-000124
+    """
+    year = datetime.now().year
+    prefix = "UG" if gym_key == "ugym" else "PZ"
+    seq = next(MEMBERSHIP_COUNTER)
+    return f"{prefix}-{year}-{seq:06d}"
+
+
+@app.context_processor
+def inject_globals():
+    """Inject commonly used helpers into all templates."""
+    return {
+        "gyms": GYMS,
+        "format_currency": format_currency,
+    }
+
+
+@app.route("/")
+def home():
+    return render_template("home.html")
+
+
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    if request.method == "POST":
+        full_name = (request.form.get("full_name") or "").strip()
+        age_raw = (request.form.get("age") or "").strip()
+        is_student = bool(request.form.get("is_student"))
+
+        errors = []
+
+        if not full_name:
+            errors.append("Full name is required.")
+
+        age = None
+        if not age_raw:
+            errors.append("Age is required.")
+        else:
+            try:
+                age = int(age_raw)
+                if age < 0:
+                    errors.append("Age must be a positive number.")
+            except ValueError:
+                errors.append("Age must be a whole number.")
+
+        if age is not None and age < 16:
+            errors.append("We are sorry, but users under 16 cannot sign up for a membership.")
+
+        if errors:
+            for msg in errors:
+                flash(msg, "error")
+            # Keep entered values so user does not have to retype
+            return render_template(
+                "signup.html",
+                full_name=full_name,
+                age=age_raw,
+                is_student=is_student,
+            )
+
+        # Derive flags
+        is_young_adult = age < 25
+        is_pensioner = age > 66
+
+        # Store in session for later steps
+        session["signup"] = {
+            "full_name": full_name,
+            "age": age,
+            "is_student": is_student,
+            "is_young_adult": is_young_adult,
+            "is_pensioner": is_pensioner,
+        }
+
+        flash("Signup details saved. Please select your membership preferences.", "success")
+        return redirect(url_for("preferences"))
+
+    # GET
+    saved = session.get("signup", {})
+    return render_template(
+        "signup.html",
+        full_name=saved.get("full_name", ""),
+        age=saved.get("age") if saved.get("age") is not None else "",
+        is_student=saved.get("is_student", False),
+    )
+
+
+@app.route("/preferences", methods=["GET", "POST"])
+def preferences():
+    signup_data = session.get("signup")
+    if not signup_data:
+        flash("Please start by completing the signup form.", "error")
+        return redirect(url_for("signup"))
+
+    if request.method == "POST":
+        wants_gym = request.form.get("wants_gym") == "yes"
+        gym_band = request.form.get("gym_band") if wants_gym else None
+
+        add_swim = bool(request.form.get("swim"))
+        add_classes = bool(request.form.get("classes"))
+        add_massage = bool(request.form.get("massage"))
+        add_physio = bool(request.form.get("physio"))
+
+        errors = []
+
+        if wants_gym and not gym_band:
+            errors.append("Please choose a gym time band.")
+
+        if not wants_gym and not any([add_swim, add_classes, add_massage, add_physio]):
+            errors.append("Please select at least one membership component (gym or add-ons).")
+
+        if errors:
+            for msg in errors:
+                flash(msg, "error")
+            return render_template(
+                "preferences.html",
+                wants_gym="yes" if wants_gym else "no",
+                gym_band=gym_band,
+                add_swim=add_swim,
+                add_classes=add_classes,
+                add_massage=add_massage,
+                add_physio=add_physio,
+            )
+
+        session["preferences"] = {
+            "wants_gym": wants_gym,
+            "gym_band": gym_band,
+            "add_swim": add_swim,
+            "add_classes": add_classes,
+            "add_massage": add_massage,
+            "add_physio": add_physio,
+        }
+
+        return redirect(url_for("recommendation"))
+
+    # GET
+    saved_pref = session.get("preferences", {})
+    return render_template(
+        "preferences.html",
+        wants_gym="yes" if saved_pref.get("wants_gym") else "no",
+        gym_band=saved_pref.get("gym_band"),
+        add_swim=saved_pref.get("add_swim", False),
+        add_classes=saved_pref.get("add_classes", False),
+        add_massage=saved_pref.get("add_massage", False),
+        add_physio=saved_pref.get("add_physio", False),
+    )
+
+
+@app.route("/recommendation", methods=["GET", "POST"])
+def recommendation():
+    signup_data = session.get("signup")
+    preferences = session.get("preferences")
+    if not signup_data or not preferences:
+        flash("Please complete the signup and preferences steps first.", "error")
+        return redirect(url_for("signup"))
+
+    pricing_result = calculate_pricing_for_selection(signup_data, preferences)
+    recommended_gym_key = pricing_result["recommended_gym"]
+
+    if request.method == "POST":
+        chosen_gym = request.form.get("chosen_gym")
+        if chosen_gym not in GYMS:
+            flash("Invalid gym selection. Please choose one of the available gyms.", "error")
+            return render_template(
+                "recommendation.html",
+                signup=signup_data,
+                preferences=preferences,
+                pricing=pricing_result,
+                recommended_gym=recommended_gym_key,
+                chosen_gym=recommended_gym_key,
+            )
+
+        session["chosen_gym"] = chosen_gym
+        return redirect(url_for("confirm"))
+
+    chosen_gym = session.get("chosen_gym", recommended_gym_key)
+    return render_template(
+        "recommendation.html",
+        signup=signup_data,
+        preferences=preferences,
+        pricing=pricing_result,
+        recommended_gym=recommended_gym_key,
+        chosen_gym=chosen_gym,
+    )
+
+
+@app.route("/confirm", methods=["GET", "POST"])
+def confirm():
+    signup_data = session.get("signup")
+    preferences = session.get("preferences")
+    if not signup_data or not preferences:
+        flash("Please complete the signup and preferences steps first.", "error")
+        return redirect(url_for("signup"))
+
+    pricing_result = calculate_pricing_for_selection(signup_data, preferences)
+    recommended_gym_key = pricing_result["recommended_gym"]
+    chosen_gym = session.get("chosen_gym", recommended_gym_key)
+
+    if chosen_gym not in GYMS:
+        chosen_gym = recommended_gym_key
+
+    chosen_pricing = pricing_result["gyms"][chosen_gym]
+
+    if request.method == "POST":
+        # When user clicks "Pay", we simulate payment and move to the payment confirmation page.
+        session["chosen_gym"] = chosen_gym
+        return redirect(url_for("pay"))
+
+    return render_template(
+        "confirm.html",
+        signup=signup_data,
+        preferences=preferences,
+        chosen_gym=chosen_gym,
+        chosen_pricing=chosen_pricing,
+        recommended_gym=recommended_gym_key,
+    )
+
+
+@app.route("/pay", methods=["GET", "POST"])
+def pay():
+    signup_data = session.get("signup")
+    preferences = session.get("preferences")
+    chosen_gym = session.get("chosen_gym")
+
+    if not signup_data or not preferences or not chosen_gym:
+        flash("Your session has expired or is incomplete. Please start again.", "error")
+        return redirect(url_for("signup"))
+
+    pricing_result = calculate_pricing_for_selection(signup_data, preferences)
+    if chosen_gym not in pricing_result["gyms"]:
+        flash("Invalid gym selection in your session. Please choose again.", "error")
+        return redirect(url_for("recommendation"))
+
+    chosen_pricing = pricing_result["gyms"][chosen_gym]
+
+    if request.method == "POST":
+        # Simulate payment success and create membership immediately
+        membership_id = generate_membership_id(chosen_gym)
+        membership_data = {
+            "membership_id": membership_id,
+            "gym_key": chosen_gym,
+            "signup": signup_data,
+            "preferences": preferences,
+            "pricing": chosen_pricing,
+            "created_at": datetime.now(),
+        }
+        MEMBERSHIPS[membership_id] = membership_data
+
+        flash("Payment successful and membership created!", "success")
+        # Clear sensitive data from session but keep membership ID in flash/redirect
+        session.pop("preferences", None)
+        session.pop("chosen_gym", None)
+
+        return redirect(url_for("success", membership_id=membership_id))
+
+    # GET: show simulated payment confirmation + button to finalize
+    return render_template(
+        "pay.html",
+        signup=signup_data,
+        preferences=preferences,
+        chosen_gym=chosen_gym,
+        chosen_pricing=chosen_pricing,
+    )
+
+
+@app.route("/success/<membership_id>")
+def success(membership_id):
+    membership = MEMBERSHIPS.get(membership_id)
+    if not membership:
+        flash("Membership not found. Please check your ID or create a new membership.", "error")
+        return redirect(url_for("access"))
+
+    return render_template("success.html", membership=membership)
+
+
+@app.route("/access", methods=["GET", "POST"])
+def access():
+    if request.method == "POST":
+        membership_id = (request.form.get("membership_id") or "").strip()
+        if not membership_id:
+            flash("Please enter a membership ID.", "error")
+            return render_template("access.html")
+
+        membership = MEMBERSHIPS.get(membership_id)
+        if not membership:
+            flash("No membership found with that ID. Please check and try again.", "error")
+            return render_template("access.html")
+
+        return redirect(url_for("membership_details", membership_id=membership_id))
+
+    return render_template("access.html")
+
+
+@app.route("/membership/<membership_id>")
+def membership_details(membership_id):
+    membership = MEMBERSHIPS.get(membership_id)
+    if not membership:
+        flash("Membership not found. Please check your ID or create a new membership.", "error")
+        return redirect(url_for("access"))
+
+    return render_template("membership_details.html", membership=membership)
+
+
+@app.errorhandler(404)
+def not_found(error):
+    return render_template("base.html", content="Page not found."), 404
+
+
+if __name__ == "__main__":
+    # Debug mode is convenient during development; disable in production.
+    app.run(debug=True)
+
