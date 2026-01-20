@@ -3,36 +3,63 @@
 {% block title %}Recommendation{% endblock %}
 
 {% block content %}
-<h1>Membership recommendation</h1>
-
-<p>
+<h1 class="text-2xl font-semibold text-slate-900 mb-1">Step 3 · Compare options</h1>
+<p class="text-sm text-slate-600 mb-4">
     Based on your age and preferences, we calculated the monthly cost for both gyms.
     The recommended option is highlighted below.
 </p>
 
 {% if pricing.recommended_savings_per_month and pricing.recommended_savings_per_month > 0 %}
-    <div class="callout callout-success" role="status" aria-live="polite">
-        <strong>Best value:</strong>
-        {{ pricing.gyms[recommended_gym].gym_name }} is cheaper by
-        <strong>{{ format_currency(pricing.recommended_savings_per_month) }}/month</strong>
-        compared to {{ pricing.gyms[pricing.recommended_vs].gym_name }} for your selections.
+    <div class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 mb-4"
+         role="status" aria-live="polite">
+        <span class="inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+        <span>
+            {{ pricing.gyms[recommended_gym].gym_name }} saves you
+            {{ format_currency(pricing.recommended_savings_per_month) }}/month
+            compared to {{ pricing.gyms[pricing.recommended_vs].gym_name }}.
+        </span>
     </div>
 {% endif %}
 
 <div class="cards-grid two-columns">
     {% for gym_key, gym_data in pricing.gyms.items() %}
         {% set is_recommended = (gym_key == recommended_gym) %}
-        <article class="card {% if is_recommended %}card-highlight card-highlight-recommended{% endif %}">
-            <header class="card-header">
-                <h2>{{ gym_data.gym_name }}</h2>
+        <article class="relative rounded-2xl border border-slate-200 bg-white/80 backdrop-blur p-5 shadow-sm space-y-4 {% if is_recommended %}ring-2 ring-emerald-300/70 bg-emerald-50/50{% endif %}">
+            <header class="flex items-center justify-between mb-1">
+                <h2 class="text-lg font-semibold text-slate-900">{{ gym_data.gym_name }}</h2>
                 {% if is_recommended %}
-                    <span class="badge badge-recommended">Recommended</span>
+                    <span class="inline-flex items-center rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold">
+                        Recommended
+                    </span>
                 {% endif %}
             </header>
+
+            <div class="flex items-baseline justify-between text-sm mb-1">
+                <div class="text-slate-600">
+                    <p>Monthly total (after discounts)</p>
+                    <p class="text-xs text-slate-500">One‑off joining fee shown separately</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-lg font-semibold text-sky-700">
+                        {{ format_currency(gym_data.monthly_total_after_discount) }}
+                    </p>
+                    <p class="text-xs text-slate-500">
+                        Joining: {{ format_currency(gym_data.joining_fee) }}
+                    </p>
+                </div>
+            </div>
+
             <div class="card-body">
                 <div class="table-wrap" role="region" aria-label="{{ gym_data.gym_name }} pricing breakdown">
-                    <table class="pricing-table">
-                        <thead>
+                    <table class="pricing-table w-full text-xs md:text-sm border-separate border-spacing-y-1">
+                        <colgroup>
+                            <col class="col-item">
+                            <col class="col-context">
+                            <col class="col-price">
+                            <col class="col-discount">
+                            <col class="col-final">
+                        </colgroup>
+                        <thead class="text-[11px] uppercase tracking-wide text-slate-500">
                             <tr>
                                 <th scope="col">Item</th>
                                 <th scope="col">Context</th>
@@ -41,7 +68,7 @@
                                 <th scope="col" class="num">Final</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="text-slate-700">
                             {% if gym_data.wants_gym %}
                                 <tr>
                                     <th scope="row">{{ gym_data.gym_plan_label }}</th>
@@ -83,63 +110,61 @@
                                     </tr>
                                 {% endfor %}
                             {% endif %}
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <th scope="row" colspan="2">Monthly subtotal (before discounts)</th>
+
+                            <tr class="font-semibold bg-slate-50">
+                                <th scope="row" colspan="2" class="py-2 pl-2">Monthly subtotal (before discounts)</th>
                                 <td class="num">{{ format_currency(gym_data.monthly_total_before_discount) }}</td>
                                 <td class="num">—</td>
-                                <td class="num">—</td>
+                                <td class="num"></td>
                             </tr>
-                            <tr>
-                                <th scope="row" colspan="2">Total discount applied</th>
-                                <td class="num">—</td>
+                            <tr class="bg-slate-50">
+                                <th scope="row" colspan="2" class="py-2 pl-2">Total discount applied</th>
+                                <td class="num"></td>
                                 <td class="num">-{{ format_currency(gym_data.discount_total) }}</td>
-                                <td class="num">—</td>
+                                <td class="num"></td>
                             </tr>
-                            <tr class="tfoot-strong">
-                                <th scope="row" colspan="2">Monthly total (after discounts)</th>
-                                <td class="num">—</td>
-                                <td class="num">—</td>
+                            <tr class="tfoot-strong bg-sky-50">
+                                <th scope="row" colspan="2" class="py-2 pl-2">Monthly total (after discounts)</th>
+                                <td class="num"></td>
+                                <td class="num"></td>
                                 <td class="num">{{ format_currency(gym_data.monthly_total_after_discount) }}</td>
                             </tr>
-                        </tfoot>
+                        </tbody>
                     </table>
-                </div>
-
-                <div class="summary-lines">
-                    <div class="summary-strong">
-                        <span>Monthly total (after discounts)</span>
-                        <span>{{ format_currency(gym_data.monthly_total_after_discount) }}</span>
-                    </div>
-                    <div>
-                        <span>One-off joining fee</span>
-                        <span>{{ format_currency(gym_data.joining_fee) }}</span>
-                    </div>
                 </div>
             </div>
         </article>
     {% endfor %}
 </div>
 
-<form method="post" class="form-card choose-gym">
-    <h2>Choose your gym to continue</h2>
-    <p class="hint">
+<form method="post" class="form-card choose-gym bg-white/90 backdrop-blur border border-slate-200 shadow-sm mt-4">
+    <h2 class="text-base font-semibold text-slate-900 mb-1">Choose your gym to continue</h2>
+    <p class="hint mb-2">
         We recommend <strong>{{ pricing.gyms[recommended_gym].gym_name }}</strong>, but you can
         select either option below.
     </p>
     <div class="radio-group">
         {% for gym_key, gym_data in pricing.gyms.items() %}
-            <label>
+            <label class="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 hover:border-sky-400 cursor-pointer">
                 <input type="radio" name="chosen_gym" value="{{ gym_key }}"
-                       {% if chosen_gym == gym_key %}checked{% endif %}>
-                {{ gym_data.gym_name }} — {{ format_currency(gym_data.monthly_total_after_discount) }}/month
+                       {% if chosen_gym == gym_key %}checked{% endif %}
+                       class="rounded-full border-slate-300 text-sky-600 focus:ring-sky-500">
+                <span class="text-sm">
+                    <span class="font-medium text-slate-900">{{ gym_data.gym_name }}</span>
+                    <span class="text-slate-600"> — {{ format_currency(gym_data.monthly_total_after_discount) }}/month</span>
+                </span>
             </label>
         {% endfor %}
     </div>
 
-    <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Continue to confirmation</button>
+    <div class="form-actions flex items-center justify-between pt-1">
+        <a href="{{ url_for('preferences') }}" class="text-xs text-slate-500 hover:text-slate-700">
+            ← Back to preferences
+        </a>
+        <button type="submit"
+                class="btn btn-primary inline-flex items-center justify-center px-5 py-2 rounded-full bg-sky-600 text-white text-sm font-medium shadow hover:bg-sky-700 transition">
+            Continue to confirmation
+        </button>
     </div>
 </form>
 {% endblock %}

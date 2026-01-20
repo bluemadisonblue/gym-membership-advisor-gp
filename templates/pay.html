@@ -3,36 +3,106 @@
 {% block title %}Payment{% endblock %}
 
 {% block content %}
-<h1>Payment confirmation</h1>
+<div class="max-w-2xl mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <div class="inline-flex items-center gap-2 rounded-full bg-amber-100 px-4 py-1.5 text-xs font-semibold text-amber-800 mb-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+            </svg>
+            Step 5 of 5
+        </div>
+        <h1 class="text-3xl font-bold text-slate-900 mb-2">Payment Simulation</h1>
+        <p class="text-slate-600">
+            Review your final costs and complete your membership
+        </p>
+    </div>
 
-<p>
-    This is a simulated payment step. No real money is taken.
-    Review your final cost below and click <strong>Create Membership</strong> to finish.
-    Your membership ID will be generated on the next screen.
-    </p>
-
-<article class="card">
-    <header class="card-header">
-        <h2>{{ chosen_pricing.gym_name }}</h2>
-    </header>
-    <div class="card-body">
-        <div class="summary-lines">
+    <!-- Disclaimer -->
+    <div class="rounded-xl bg-amber-50 border border-amber-200 p-4 mb-6">
+        <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"/>
+            </svg>
             <div>
-                <span>Monthly total (after discounts)</span>
-                <span>{{ format_currency(chosen_pricing.monthly_total_after_discount) }}</span>
-            </div>
-            <div>
-                <span>One-off joining fee</span>
-                <span>{{ format_currency(chosen_pricing.joining_fee) }}</span>
+                <p class="text-sm font-semibold text-amber-900 mb-1">Simulated Payment Only</p>
+                <p class="text-xs text-amber-700">
+                    This is a coursework demonstration. No real payment is processed, and no money will be charged.
+                </p>
             </div>
         </div>
     </div>
-</article>
 
-<form method="post" class="form-card">
-    <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Create Membership</button>
-    </div>
-</form>
+    <!-- Pricing Summary Card -->
+    <article class="rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden mb-6">
+        <header class="bg-gradient-to-r from-sky-600 to-sky-700 px-6 py-4">
+            <h2 class="text-xl font-bold text-white">{{ chosen_pricing.gym_name }}</h2>
+            <p class="text-sky-100 text-sm mt-1">Your membership summary</p>
+        </header>
+        
+        <div class="p-6 space-y-4">
+            <!-- Monthly Cost -->
+            <div class="flex items-center justify-between pb-4 border-b border-slate-200">
+                <div>
+                    <p class="text-sm font-semibold text-slate-900">Monthly Subscription</p>
+                    <p class="text-xs text-slate-500">Recurring charge (after discounts)</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-2xl font-bold text-sky-700">
+                        {{ format_currency(chosen_pricing.monthly_total_after_discount) }}
+                    </p>
+                    <p class="text-xs text-slate-500">per month</p>
+                </div>
+            </div>
+
+            <!-- Joining Fee -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-semibold text-slate-900">Joining Fee</p>
+                    <p class="text-xs text-slate-500">One-time payment</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xl font-bold text-slate-900">
+                        {{ format_currency(chosen_pricing.joining_fee) }}
+                    </p>
+                    <p class="text-xs text-slate-500">paid once</p>
+                </div>
+            </div>
+
+            <!-- Total First Payment -->
+            <div class="rounded-lg bg-slate-50 p-4 mt-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-900">First Payment Total</p>
+                        <p class="text-xs text-slate-500">Joining fee + first month</p>
+                    </div>
+                    <p class="text-2xl font-bold text-slate-900">
+                        {{ format_currency(chosen_pricing.joining_fee + chosen_pricing.monthly_total_after_discount) }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </article>
+
+    <!-- Action Form -->
+    <form method="post" class="space-y-6">
+        <div class="flex items-center justify-between pt-4">
+            <a href="{{ url_for('confirm') }}" 
+               class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Back to confirmation
+            </a>
+            <button type="submit"
+                    class="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-lg bg-emerald-600 text-white font-bold shadow-lg hover:bg-emerald-700 hover:shadow-xl hover:scale-105 transition-all duration-200">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Create Membership
+            </button>
+        </div>
+    </form>
+</div>
 {% endblock %}
 
