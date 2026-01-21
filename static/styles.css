@@ -961,7 +961,6 @@ select:focus {
     }
 }
 
-
 /* ========================================
    MOBILE & TABLET OPTIMIZATIONS
    ======================================== */
@@ -1002,8 +1001,8 @@ select:focus {
     input[type="email"],
     select,
     textarea {
-        font-size: 16px !important;
-        min-height: 44px;
+        font-size: 16px !important; /* Prevents zoom on iOS */
+        min-height: 44px; /* iOS touch target size */
     }
     
     /* Button touch targets */
@@ -1051,11 +1050,58 @@ select:focus {
     .site-main {
         padding: 2rem 0 2.5rem;
     }
+    
+    /* Touch-friendly inputs for tablets */
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    select {
+        font-size: 16px;
+    }
+}
+
+/* Landscape phone optimization */
+@media (max-width: 896px) and (orientation: landscape) {
+    .site-main {
+        padding: 1rem 0 1.5rem;
+    }
+    
+    /* Reduce vertical spacing in landscape */
+    .hero {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
 }
 
 /* Touch device optimizations */
 @media (hover: none) and (pointer: coarse) {
+    /* Increase touch targets on touch devices */
     a, button, input, select, textarea {
         -webkit-tap-highlight-color: rgba(14, 165, 233, 0.15);
+    }
+    
+    /* Remove hover effects on touch devices */
+    .group:hover .group-hover\:scale-105 {
+        transform: scale(1);
+    }
+}
+
+/* Improve performance on mobile */
+@media (max-width: 640px) {
+    /* Disable expensive animations on low-end devices */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+    
+    /* Optimize blob animations */
+    .animate-blob {
+        animation: none;
+        opacity: 0.5;
     }
 }
