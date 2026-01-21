@@ -322,25 +322,43 @@ a:hover {
 /* Mobile header optimizations */
 @media (max-width: 640px) {
     .site-header {
-        padding: 0.4rem 0;
+        padding: 0.35rem 0;
+    }
+    
+    .header-content {
+        gap: 0.35rem;
+    }
+    
+    .logo {
+        flex-shrink: 0;
     }
     
     .logo-main {
-        font-size: 0.85rem;
+        font-size: 0.75rem;
+        letter-spacing: 0;
     }
     
     .logo-sub {
-        font-size: 0.55rem;
+        font-size: 0.5rem;
+        margin-top: 0.1rem;
     }
     
     .nav {
-        gap: 0.4rem;
+        gap: 0.3rem;
     }
     
     .nav a {
-        font-size: 0.7rem;
-        padding: 0.35rem 0.6rem;
-        border-radius: 0.5rem;
+        font-size: 0.65rem;
+        padding: 0.3rem 0.5rem;
+        border-radius: 0.4rem;
+        background-color: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    
+    .nav a:hover,
+    .nav a.nav-active {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.25);
     }
 }
 
@@ -1141,9 +1159,15 @@ select:focus {
 @media (max-width: 640px) {
     /* Container padding for mobile - extra padding for absolute positioned elements */
     .container {
-        padding-left: 1.5rem !important;
-        padding-right: 1.5rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
         overflow-x: hidden;
+    }
+    
+    /* Header container - even less padding */
+    .site-header .container {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
     }
     
     /* Ensure grid items don't overflow */
@@ -1161,7 +1185,7 @@ select:focus {
     /* Main content padding */
     .site-main {
         padding: 1rem 0 1.5rem;
-        padding-top: calc(48px + 1rem) !important; /* Account for smaller fixed header on mobile */
+        padding-top: calc(44px + 0.75rem) !important; /* Account for smaller fixed header on mobile */
     }
     
     /* Stepper optimization for mobile */
@@ -1697,17 +1721,30 @@ select:focus {
 /* Small phones (< 375px) */
 @media (max-width: 374px) {
     .container {
-        padding-left: 0.75rem;
-        padding-right: 0.75rem;
+        padding-left: 0.65rem;
+        padding-right: 0.65rem;
+    }
+    
+    .site-header .container {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
     }
     
     .logo-main {
-        font-size: 0.85rem;
+        font-size: 0.7rem;
+    }
+    
+    .logo-sub {
+        font-size: 0.45rem;
+    }
+    
+    .nav {
+        gap: 0.25rem;
     }
     
     .nav a {
-        font-size: 0.7rem;
-        padding: 0.4rem 0.6rem;
+        font-size: 0.6rem;
+        padding: 0.25rem 0.4rem;
     }
     
     h1 {
