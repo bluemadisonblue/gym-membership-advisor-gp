@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import Dict, Any, Optional
 
 """
 Static membership and pricing configuration for the gyms.
@@ -110,12 +111,25 @@ DISCOUNTS = {
 NON_DISCOUNTED_ADDONS = {"massage", "physio"}
 
 
-def get_gym(gym_key: str):
-    """Return gym configuration by key."""
+def get_gym(gym_key: str) -> Optional[Dict[str, Any]]:
+    """
+    Return gym configuration by key.
+
+    Args:
+        gym_key: The gym key identifier ("ugym" or "power_zone")
+
+    Returns:
+        The gym configuration dictionary, or None if not found
+    """
     return GYMS.get(gym_key)
 
 
-def list_gym_keys():
-    """Convenience helper for iterating all gyms."""
+def list_gym_keys() -> list[str]:
+    """
+    Convenience helper for iterating all gyms.
+
+    Returns:
+        A list of all available gym keys
+    """
     return list(GYMS.keys())
 

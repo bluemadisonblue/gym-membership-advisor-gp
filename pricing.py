@@ -5,12 +5,28 @@ from data import GYMS, DISCOUNTS, NON_DISCOUNTED_ADDONS
 
 
 def money(value: Decimal) -> Decimal:
-    """Normalize a Decimal monetary value to 2 decimal places."""
+    """
+    Normalize a Decimal monetary value to 2 decimal places.
+
+    Args:
+        value: The decimal value to normalize
+
+    Returns:
+        The value rounded to 2 decimal places using half-up rounding
+    """
     return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 def format_currency(value: Decimal) -> str:
-    """Format a Decimal as a GBP currency string."""
+    """
+    Format a Decimal as a GBP currency string.
+
+    Args:
+        value: The decimal value to format
+
+    Returns:
+        A formatted currency string (e.g., "£10.50")
+    """
     return f"£{money(value):.2f}"
 
 
@@ -18,8 +34,15 @@ def get_discount_category(age: int, is_student: bool, is_pensioner_flag: bool) -
     """
     Determine which discount category applies.
 
-    - Pensioner (age > 66) takes precedence over student/young adult.
-    - Students and young adults (age < 25) use the same category.
+    Args:
+        age: The user's age
+        is_student: Whether the user is a student
+        is_pensioner_flag: Whether the user is a pensioner (age > 66)
+
+    Returns:
+        The discount category string ("pensioner", "student_young", or None)
+        Note: Pensioner takes precedence over student/young adult.
+        Students and young adults (age < 25) use the same category.
     """
     if is_pensioner_flag:
         return "pensioner"
@@ -31,7 +54,16 @@ def get_discount_category(age: int, is_student: bool, is_pensioner_flag: bool) -
 
 
 def get_discount_rate(gym_key: str, discount_category: Optional[str]) -> Decimal:
-    """Return the discount rate (0-1) for the given gym and category."""
+    """
+    Return the discount rate (0-1) for the given gym and category.
+
+    Args:
+        gym_key: The gym key identifier ("ugym" or "power_zone")
+        discount_category: The discount category string or None
+
+    Returns:
+        The discount rate as a Decimal (0.00 to 1.00)
+    """
     if not discount_category:
         return Decimal("0.00")
 
@@ -43,28 +75,20 @@ def calculate_pricing_for_selection(signup: Dict[str, Any], preferences: Dict[st
     """
     Calculate pricing breakdown for each gym based on the user's signup info and preferences.
 
-    Returns a structure:
-    {
-      "gyms": {
-        "ugym": {
-            "gym_key": "ugym",
-            "gym_name": "uGym",
-            "joining_fee": Decimal,
-            "base_gym_price": Decimal,
-            "addons": [
-                {"key": "swim", "label": "Swimming pool", "price": Decimal,
-                 "discount": Decimal, "final_price": Decimal, "discount_applied": bool},
-                ...
-            ],
-            "addons_total": Decimal,
-            "discount_total": Decimal,
-            "monthly_total_before_discount": Decimal,
-            "monthly_total_after_discount": Decimal,
-        },
-        "power_zone": { ... }
-      },
-      "recommended_gym": "ugym" | "power_zone"
-    }
+    Args:
+        signup: Dictionary containing user signup data (age, is_student, is_pensioner, etc.)
+        preferences: Dictionary containing user preferences (wants_gym, gym_band, addons, etc.)
+
+    Returns:
+        A dictionary containing:
+        - "gyms": Dictionary with pricing breakdown for each gym
+        - "recommended_gym": The gym key with the lowest monthly total
+        - "discount_category": The applied discount category
+        - "recommended_vs": The other gym key for comparison
+        - "recommended_savings_per_month": Monthly savings compared to the other gym
+
+    Raises:
+        ValueError: If gym_band is required but not provided, or if gym_band is invalid
     """
     age = signup.get("age") or 0
     is_student = bool(signup.get("is_student"))

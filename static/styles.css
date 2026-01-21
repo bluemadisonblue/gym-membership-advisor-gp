@@ -1,3 +1,7 @@
+/* ========================================
+   RESET & BASE STYLES
+   ======================================== */
+
 *,
 *::before,
 *::after {
@@ -106,7 +110,10 @@ input[type="checkbox"]:focus {
     }
 }
 
-/* Animations */
+/* ========================================
+   ANIMATIONS & KEYFRAMES
+   ======================================== */
+
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -315,6 +322,10 @@ input[type="checkbox"]:focus {
     animation-delay: 4s;
 }
 
+/* ========================================
+   BODY & TYPOGRAPHY
+   ======================================== */
+
 body {
     margin: 0;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -338,6 +349,10 @@ a:hover {
     text-decoration: underline;
 }
 
+/* ========================================
+   LAYOUT & CONTAINERS
+   ======================================== */
+
 .container {
     width: 100%;
     max-width: 1080px;
@@ -346,6 +361,10 @@ a:hover {
     overflow-x: hidden;
     box-sizing: border-box;
 }
+
+/* ========================================
+   HEADER & NAVIGATION
+   ======================================== */
 
 .site-header {
     background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #14b8a6 100%);
@@ -501,6 +520,10 @@ a:hover {
     }
 }
 
+/* ========================================
+   MAIN CONTENT & FOOTER
+   ======================================== */
+
 .site-main {
     padding: 2.5rem 0 3.5rem;
     padding-top: calc(60px + 2.5rem); /* Account for fixed header */
@@ -635,6 +658,10 @@ a:hover {
     }
 }
 
+/* ========================================
+   HERO & CONTENT SECTIONS
+   ======================================== */
+
 .hero {
     display: flex;
     flex-direction: column;
@@ -756,6 +783,10 @@ h3 {
     font-size: 1.05rem;
 }
 
+/* ========================================
+   BUTTONS & INTERACTIVE ELEMENTS
+   ======================================== */
+
 .btn {
     display: inline-flex;
     align-items: center;
@@ -791,6 +822,10 @@ h3 {
 .btn-secondary:hover {
     background: #f3f4f6;
 }
+
+/* ========================================
+   CARDS & GRID LAYOUTS
+   ======================================== */
 
 .info-grid {
     display: grid;
@@ -861,6 +896,10 @@ h3 {
     color: #374151;
 }
 
+/* ========================================
+   FLASH MESSAGES & ALERTS
+   ======================================== */
+
 .flash-container {
     margin-bottom: 1rem;
 }
@@ -881,6 +920,10 @@ h3 {
     background: #ecfdf5;
     color: #166534;
 }
+
+/* ========================================
+   FORMS & INPUT ELEMENTS
+   ======================================== */
 
 .form-card {
     background: #ffffff;

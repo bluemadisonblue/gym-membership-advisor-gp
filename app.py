@@ -1,5 +1,6 @@
+from datetime import date, datetime
 from decimal import Decimal
-from datetime import datetime
+from typing import Dict, Any, Optional, Tuple
 import itertools
 import os
 
@@ -17,13 +18,19 @@ from data import GYMS
 from pricing import calculate_pricing_for_selection, format_currency
 
 
-app = Flask(__name__)
+# Get the directory where this script is located
+basedir = os.path.abspath(os.path.dirname(__file__))
+app = Flask(
+    __name__,
+    template_folder=os.path.join(basedir, 'templates'),
+    static_folder=os.path.join(basedir, 'static')
+)
 # Use environment variable for production, fallback to dev key for local development
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-me")
 
 
 # In-memory membership store (no database for now)
-MEMBERSHIPS = {}
+MEMBERSHIPS: Dict[str, Dict[str, Any]] = {}
 MEMBERSHIP_COUNTER = itertools.count(1)
 
 
@@ -31,12 +38,69 @@ def generate_membership_id(gym_key: str) -> str:
     """
     Generate a human-friendly membership ID.
 
-    Example: UG-2026-000123 or PZ-2026-000124
+    Args:
+        gym_key: The gym key identifier ("ugym" or "power_zone")
+
+    Returns:
+        A formatted membership ID string (e.g., "UG-2026-000123" or "PZ-2026-000124")
     """
     year = datetime.now().year
     prefix = "UG" if gym_key == "ugym" else "PZ"
     seq = next(MEMBERSHIP_COUNTER)
     return f"{prefix}-{year}-{seq:06d}"
+
+
+def calculate_age(date_of_birth: date) -> int:
+    """
+    Calculate age from date of birth.
+
+    Args:
+        date_of_birth: The date of birth
+
+    Returns:
+        The calculated age
+    """
+    today = date.today()
+    age = today.year - date_of_birth.year
+    # Adjust if birthday hasn't occurred yet this year
+    if (today.month, today.day) < (date_of_birth.month, date_of_birth.day):
+        age -= 1
+    return age
+
+
+def validate_signup_data(full_name: str, date_of_birth_raw: str) -> Tuple[Optional[int], Optional[date], list[str]]:
+    """
+    Validate signup form data.
+
+    Args:
+        full_name: The user's full name
+        date_of_birth_raw: The date of birth as a string
+
+    Returns:
+        A tuple of (age, date_of_birth, errors)
+    """
+    errors = []
+    age = None
+    date_of_birth = None
+
+    if not full_name:
+        errors.append("Full name is required.")
+
+    if not date_of_birth_raw:
+        errors.append("Date of birth is required.")
+    else:
+        try:
+            date_of_birth = datetime.strptime(date_of_birth_raw, "%Y-%m-%d").date()
+            age = calculate_age(date_of_birth)
+
+            if age < 0:
+                errors.append("Invalid date of birth.")
+            elif age < 16:
+                errors.append("We are sorry, but users under 16 cannot sign up for a membership.")
+        except ValueError:
+            errors.append("Invalid date format.")
+
+    return age, date_of_birth, errors
 
 
 @app.context_processor
@@ -55,43 +119,17 @@ def home():
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
-    from datetime import datetime, date
-    
+    """Handle user signup form submission and display."""
     # Calculate max date (today - 16 years) for the date picker
     today = date.today()
     max_date = date(today.year - 16, today.month, today.day)
-    
+
     if request.method == "POST":
         full_name = (request.form.get("full_name") or "").strip()
         date_of_birth_raw = (request.form.get("date_of_birth") or "").strip()
         is_student = bool(request.form.get("is_student"))
 
-        errors = []
-
-        if not full_name:
-            errors.append("Full name is required.")
-
-        age = None
-        date_of_birth = None
-        if not date_of_birth_raw:
-            errors.append("Date of birth is required.")
-        else:
-            try:
-                date_of_birth = datetime.strptime(date_of_birth_raw, "%Y-%m-%d").date()
-                # Calculate age
-                today = date.today()
-                age = today.year - date_of_birth.year
-                # Adjust if birthday hasn't occurred yet this year
-                if (today.month, today.day) < (date_of_birth.month, date_of_birth.day):
-                    age -= 1
-                    
-                if age < 0:
-                    errors.append("Invalid date of birth.")
-            except ValueError:
-                errors.append("Invalid date format.")
-
-        if age is not None and age < 16:
-            errors.append("We are sorry, but users under 16 cannot sign up for a membership.")
+        age, date_of_birth, errors = validate_signup_data(full_name, date_of_birth_raw)
 
         if errors:
             for msg in errors:
@@ -121,19 +159,20 @@ def signup():
         flash("Signup details saved. Please select your membership preferences.", "success")
         return redirect(url_for("preferences"))
 
-    # GET
-    return render_template("signup.html", max_date=max_date.isoformat())
+    # GET: Load saved values if returning to this page
     saved = session.get("signup", {})
     return render_template(
         "signup.html",
+        max_date=max_date.isoformat(),
         full_name=saved.get("full_name", ""),
-        age=saved.get("age") if saved.get("age") is not None else "",
+        date_of_birth=saved.get("date_of_birth", ""),
         is_student=saved.get("is_student", False),
     )
 
 
 @app.route("/preferences", methods=["GET", "POST"])
 def preferences():
+    """Handle membership preferences form submission and display."""
     signup_data = session.get("signup")
     if not signup_data:
         flash("Please start by completing the signup form.", "error")
@@ -195,6 +234,7 @@ def preferences():
 
 @app.route("/recommendation", methods=["GET", "POST"])
 def recommendation():
+    """Display gym recommendations and handle gym selection."""
     signup_data = session.get("signup")
     preferences = session.get("preferences")
     if not signup_data or not preferences:
@@ -233,6 +273,7 @@ def recommendation():
 
 @app.route("/confirm", methods=["GET", "POST"])
 def confirm():
+    """Display confirmation page before payment."""
     signup_data = session.get("signup")
     preferences = session.get("preferences")
     if not signup_data or not preferences:
@@ -265,6 +306,7 @@ def confirm():
 
 @app.route("/pay", methods=["GET", "POST"])
 def pay():
+    """Handle payment processing and membership creation."""
     signup_data = session.get("signup")
     preferences = session.get("preferences")
     chosen_gym = session.get("chosen_gym")
@@ -311,7 +353,8 @@ def pay():
 
 
 @app.route("/success/<membership_id>")
-def success(membership_id):
+def success(membership_id: str):
+    """Display success page after membership creation."""
     membership = MEMBERSHIPS.get(membership_id)
     if not membership:
         flash("Membership not found. Please check your ID or create a new membership.", "error")
@@ -322,6 +365,7 @@ def success(membership_id):
 
 @app.route("/access", methods=["GET", "POST"])
 def access():
+    """Handle membership access form."""
     if request.method == "POST":
         membership_id = (request.form.get("membership_id") or "").strip()
         if not membership_id:
@@ -339,7 +383,8 @@ def access():
 
 
 @app.route("/membership/<membership_id>")
-def membership_details(membership_id):
+def membership_details(membership_id: str):
+    """Display membership details."""
     membership = MEMBERSHIPS.get(membership_id)
     if not membership:
         flash("Membership not found. Please check your ID or create a new membership.", "error")
