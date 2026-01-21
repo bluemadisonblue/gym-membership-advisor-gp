@@ -1,6 +1,7 @@
 from decimal import Decimal
 from datetime import datetime
 import itertools
+import os
 
 from flask import (
     Flask,
@@ -17,7 +18,8 @@ from pricing import calculate_pricing_for_selection, format_currency
 
 
 app = Flask(__name__)
-app.secret_key = "dev-secret-key-change-me"  # In production, load from environment
+# Use environment variable for production, fallback to dev key for local development
+app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-me")
 
 
 # In-memory membership store (no database for now)
@@ -334,6 +336,9 @@ def membership_details(membership_id):
 def not_found(error):
     return render_template("base.html", content="Page not found."), 404
 
+
+# For Vercel serverless deployment
+# The 'app' object is automatically detected by Vercel
 
 if __name__ == "__main__":
     # Debug mode is convenient during development; disable in production.
