@@ -80,57 +80,179 @@
     </div>
 </section>
 
-<!-- Image Gallery Section -->
+<!-- Image Carousel Section -->
 <section class="mt-8 sm:mt-12 md:mt-16 animate-fade-in animation-delay-800">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-        <!-- Large Image - Desktop/Laptop View -->
-        <div class="md:col-span-2 rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-xl hover:shadow-2xl transition-shadow duration-300 group">
-            <div class="relative h-full min-h-[250px] sm:min-h-[350px] md:min-h-[400px]">
-                <img src="{{ url_for('static', filename='images/1.jpg') }}" 
-                     alt="Gym management platform" 
-                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                     loading="lazy">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </div>
-        </div>
-
-        <!-- Right Column - 2 Smaller Images Stacked -->
-        <div class="flex flex-col gap-3 sm:gap-4 md:gap-6">
-            <!-- Mobile Phone View -->
-            <div class="rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-xl hover:shadow-2xl transition-shadow duration-300 group flex-1">
-                <div class="relative h-full min-h-[150px] sm:min-h-[170px] md:min-h-[190px]">
-                    <img src="{{ url_for('static', filename='images/2.jpg') }}" 
-                         alt="Mobile gym membership" 
-                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                         loading="lazy">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+    <div class="relative rounded-2xl overflow-hidden shadow-2xl">
+        <!-- Carousel Container -->
+        <div class="carousel-container relative">
+            <!-- Carousel Slides -->
+            <div class="carousel-track" id="carouselTrack">
+                <!-- Slide 1 -->
+                <div class="carousel-slide active">
+                    <div class="relative h-64 sm:h-80 md:h-96 lg:h-[500px]">
+                        <img src="{{ url_for('static', filename='images/1.jpg') }}" 
+                             alt="Gym management platform" 
+                             class="w-full h-full object-cover"
+                             loading="eager">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+                        <div class="absolute bottom-6 left-6 right-6 text-white">
+                            <h3 class="text-2xl md:text-3xl font-bold mb-2 text-white">Modern Gym Management</h3>
+                            <p class="text-sm md:text-base text-white">State-of-the-art facilities and equipment</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Slide 2 -->
+                <div class="carousel-slide">
+                    <div class="relative h-64 sm:h-80 md:h-96 lg:h-[500px]">
+                        <img src="{{ url_for('static', filename='images/2.jpg') }}" 
+                             alt="Mobile gym membership" 
+                             class="w-full h-full object-cover"
+                             loading="lazy">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+                        <div class="absolute bottom-6 left-6 right-6 text-white">
+                            <h3 class="text-2xl md:text-3xl font-bold mb-2 text-white">Mobile Access</h3>
+                            <p class="text-sm md:text-base text-white">Manage your membership on the go</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Slide 3 -->
+                <div class="carousel-slide">
+                    <div class="relative h-64 sm:h-80 md:h-96 lg:h-[500px]">
+                        <img src="{{ url_for('static', filename='images/3.jpg') }}" 
+                             alt="Gym facilities" 
+                             class="w-full h-full object-cover"
+                             style="object-position: center 45%;"
+                             loading="lazy">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+                        <div class="absolute bottom-6 left-6 right-6 text-white">
+                            <h3 class="text-2xl md:text-3xl font-bold mb-2 text-white">Premium Equipment</h3>
+                            <p class="text-sm md:text-base text-white">Top-quality fitness equipment for all levels</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Slide 4 -->
+                <div class="carousel-slide">
+                    <div class="relative h-64 sm:h-80 md:h-96 lg:h-[500px]">
+                        <img src="{{ url_for('static', filename='images/4.jpg') }}" 
+                             alt="Gym experience" 
+                             class="w-full h-full object-cover"
+                             style="object-position: center 50%;"
+                             loading="lazy">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+                        <div class="absolute bottom-6 left-6 right-6 text-white">
+                            <h3 class="text-2xl md:text-3xl font-bold mb-2 text-white">Complete Experience</h3>
+                            <p class="text-sm md:text-base text-white">Everything you need for your fitness journey</p>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <!-- Products/Equipment View -->
-            <div class="rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-xl hover:shadow-2xl transition-shadow duration-300 group flex-1">
-                <div class="relative h-full min-h-[150px] sm:min-h-[170px] md:min-h-[190px]">
-                    <img src="{{ url_for('static', filename='images/3.jpg') }}" 
-                         alt="Gym facilities" 
-                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                         loading="lazy">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                </div>
+            
+            <!-- Navigation Arrows -->
+            <button class="carousel-btn carousel-prev" onclick="moveCarousel(-1)" aria-label="Previous slide">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <button class="carousel-btn carousel-next" onclick="moveCarousel(1)" aria-label="Next slide">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </button>
+            
+            <!-- Dots Indicator -->
+            <div class="carousel-dots" id="carouselDots">
+                <button class="carousel-dot active" onclick="goToSlide(0)" aria-label="Go to slide 1"></button>
+                <button class="carousel-dot" onclick="goToSlide(1)" aria-label="Go to slide 2"></button>
+                <button class="carousel-dot" onclick="goToSlide(2)" aria-label="Go to slide 3"></button>
+                <button class="carousel-dot" onclick="goToSlide(3)" aria-label="Go to slide 4"></button>
             </div>
-        </div>
-    </div>
-    
-    <!-- Optional: Full Width Bottom Image -->
-    <div class="mt-3 sm:mt-4 md:mt-6 rounded-xl sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-xl hover:shadow-2xl transition-shadow duration-300 group">
-        <div class="relative h-48 sm:h-56 md:h-64 lg:h-80">
-            <img src="{{ url_for('static', filename='images/4.jpg') }}" 
-                 alt="Gym experience" 
-                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                 loading="lazy">
-            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         </div>
     </div>
 </section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.carousel-slide');
+    const dots = document.querySelectorAll('.carousel-dot');
+    let autoplayInterval;
+
+    function showSlide(n) {
+        // Remove active class from all slides and dots
+        slides.forEach(slide => slide.classList.remove('active'));
+        dots.forEach(dot => dot.classList.remove('active'));
+        
+        // Handle wrapping
+        if (n >= slides.length) currentSlide = 0;
+        if (n < 0) currentSlide = slides.length - 1;
+        
+        // Add active class to current slide and dot
+        slides[currentSlide].classList.add('active');
+        dots[currentSlide].classList.add('active');
+    }
+
+    window.moveCarousel = function(direction) {
+        currentSlide += direction;
+        showSlide(currentSlide);
+        resetAutoplay();
+    }
+
+    window.goToSlide = function(n) {
+        currentSlide = n;
+        showSlide(currentSlide);
+        resetAutoplay();
+    }
+
+    function autoplay() {
+        currentSlide++;
+        showSlide(currentSlide);
+    }
+
+    function resetAutoplay() {
+        clearInterval(autoplayInterval);
+        autoplayInterval = setInterval(autoplay, 5000);
+    }
+
+    // Initialize autoplay
+    autoplayInterval = setInterval(autoplay, 5000);
+
+    // Pause autoplay on hover
+    document.querySelector('.carousel-container').addEventListener('mouseenter', () => {
+        clearInterval(autoplayInterval);
+    });
+
+    document.querySelector('.carousel-container').addEventListener('mouseleave', () => {
+        resetAutoplay();
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') moveCarousel(-1);
+        if (e.key === 'ArrowRight') moveCarousel(1);
+    });
+
+    // Touch support for mobile
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    document.querySelector('.carousel-container').addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    });
+
+    document.querySelector('.carousel-container').addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    });
+
+    function handleSwipe() {
+        if (touchEndX < touchStartX - 50) moveCarousel(1);
+        if (touchEndX > touchStartX + 50) moveCarousel(-1);
+    }
+});
+</script>
 
 <!-- Comparison Preview Card -->
 <section class="mt-12 sm:mt-16 md:mt-20 animate-fade-in animation-delay-1000">
