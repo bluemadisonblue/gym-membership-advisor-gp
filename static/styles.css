@@ -40,13 +40,57 @@ body {
 }
 
 /* Improve form element rendering on iOS */
-input,
+input:not([type="checkbox"]):not([type="radio"]),
 textarea,
 select,
 button {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
+}
+
+/* Checkbox styling - make them visible and styled */
+input[type="checkbox"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    border: 2px solid #94a3b8;
+    border-radius: 4px;
+    background-color: #ffffff;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+input[type="checkbox"]:hover {
+    border-color: #0ea5e9;
+}
+
+input[type="checkbox"]:checked {
+    background-color: #0ea5e9;
+    border-color: #0ea5e9;
+}
+
+input[type="checkbox"]:checked::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+input[type="checkbox"]:focus {
+    outline: 2px solid #0ea5e9;
+    outline-offset: 2px;
 }
 
 /* Prevent iOS zoom on focus */
@@ -93,6 +137,66 @@ button {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+@keyframes glow {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(14, 165, 233, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(14, 165, 233, 0.6);
     }
 }
 
@@ -293,20 +397,37 @@ a:hover {
     color: rgba(255, 255, 255, 0.9);
     padding: 0.6rem 1.25rem;
     border-radius: 0.75rem;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     white-space: nowrap;
     background-color: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.2);
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.nav a::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.nav a:hover::before {
+    left: 100%;
 }
 
 .nav a:hover {
     color: #ffffff;
     background-color: rgba(255, 255, 255, 0.25);
     border-color: rgba(255, 255, 255, 0.35);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
 }
 
 .nav a.nav-active {
@@ -314,6 +435,7 @@ a:hover {
     background-color: rgba(255, 255, 255, 0.3);
     border-color: rgba(255, 255, 255, 0.4);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    animation: glow 2s ease-in-out infinite;
 }
 
 /* Tablet header optimizations */
@@ -456,17 +578,34 @@ a:hover {
     border-radius: 0.5rem;
     font-weight: 500;
     font-size: 0.875rem;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 2px 4px rgba(14, 165, 233, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.footer-link::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    transition: left 0.5s ease;
+}
+
+.footer-link:hover::before {
+    left: 100%;
 }
 
 .footer-link:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(14, 165, 233, 0.3);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4);
 }
 
 .footer-link:active {
-    transform: translateY(0);
+    transform: translateY(-1px) scale(1.02);
 }
 
 .footer-icon {
@@ -844,8 +983,38 @@ select:focus {
     font-size: 0.9rem;
 }
 
+/* Hidden checkboxes and radio buttons - using sr-only */
+.sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border-width: 0 !important;
+}
+
+/* Force hide all input elements with sr-only class */
+input.sr-only,
+input[type="radio"].sr-only,
+input[type="checkbox"].sr-only {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
 .checkbox-card input[type="checkbox"] {
     margin: 0;
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    cursor: pointer;
+    accent-color: #0ea5e9;
+    border: 2px solid #cbd5e1;
+    border-radius: 4px;
 }
 
 .addons-list {
@@ -1351,6 +1520,85 @@ select:focus {
 }
 
 /* ========================================
+   PREMIUM EFFECTS & ANIMATIONS
+   ======================================== */
+
+/* Premium card hover effects - more specific to avoid breaking layout */
+article.relative:hover {
+    transform: translateY(-4px);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Premium button effects */
+button[type="submit"],
+a[class*="bg-sky"] {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+button[type="submit"]::before,
+a[class*="bg-sky"]::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+button[type="submit"]:hover::before,
+a[class*="bg-sky"]:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* Premium input focus effects - removed transform to prevent layout issues */
+input:focus:not([type="checkbox"]):not([type="radio"]),
+textarea:focus,
+select:focus {
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15) !important;
+}
+
+/* Smooth page transitions - removed to fix visibility issue */
+
+/* Pricing card premium effects */
+.pricing-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.pricing-card::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    bottom: -50%;
+    left: -50%;
+    background: linear-gradient(to bottom, rgba(14, 165, 233, 0) 0%, rgba(14, 165, 233, 0.05) 50%, rgba(14, 165, 233, 0) 100%);
+    transform: rotateZ(45deg) translateY(100%);
+    transition: transform 0.8s ease-out;
+}
+
+.pricing-card:hover::after {
+    transform: rotateZ(45deg) translateY(-100%);
+}
+
+/* Stepper premium animation */
+.stepper-item.is-active .stepper-dot {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Flash message premium entrance */
+.flash {
+    animation: slideInRight 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ========================================
    CAROUSEL STYLES
    ======================================== */
 
@@ -1439,16 +1687,25 @@ select:focus {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     color: #1e293b;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.carousel-btn svg {
+    transition: transform 0.3s ease;
+}
+
+.carousel-btn:hover svg {
+    transform: scale(1.2);
 }
 
 .carousel-btn:hover {
     background: rgba(255, 255, 255, 1);
     transform: translateY(-50%) scale(1.15);
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
     border-color: rgba(255, 255, 255, 1);
+    animation: pulse 1s ease-in-out;
 }
 
 .carousel-btn:active {
@@ -1613,10 +1870,25 @@ select:focus {
     /* Better touch targets */
     button,
     a,
-    input,
+    input:not([type="checkbox"]):not([type="radio"]),
     select,
     textarea {
         min-height: 44px;
+    }
+    
+    /* Larger checkboxes for mobile */
+    input[type="checkbox"] {
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
+        min-height: 24px !important;
+    }
+    
+    input[type="checkbox"]:checked::after {
+        left: 7px !important;
+        top: 2px !important;
+        width: 6px !important;
+        height: 12px !important;
     }
     
     /* Form improvements */
@@ -1808,4 +2080,65 @@ select:focus {
         width: 18px;
         height: 18px;
     }
+}
+
+/* Premium Button Animations - Smooth and Stable */
+/* Override all Tailwind scale transforms with smooth translateY */
+button,
+a[class*="rounded"],
+button[type="submit"] {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+/* Override scale with translateY for all buttons */
+button:hover,
+a[class*="rounded-full"]:hover,
+a[class*="rounded-xl"]:hover,
+a[class*="rounded-lg"]:hover,
+button[type="submit"]:hover {
+    transform: translateY(-2px) scale(1) !important;
+}
+
+/* Quick press down on click */
+button:active,
+a[class*="rounded-full"]:active,
+a[class*="rounded-xl"]:active,
+a[class*="rounded-lg"]:active,
+button[type="submit"]:active {
+    transform: translateY(0px) scale(1) !important;
+    transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+}
+
+/* Prevent scale on specific button types */
+.bg-sky-600:hover,
+.bg-slate-900:hover,
+.bg-emerald-600:hover {
+    transform: translateY(-2px) scale(1) !important;
+}
+
+/* Fix shadow artifacts */
+button,
+a[class*="rounded"],
+button[type="submit"] {
+    isolation: isolate;
+}
+
+/* Fix gradient button shadow artifacts */
+.bg-gradient-to-r,
+button[class*="gradient"],
+a[class*="gradient"] {
+    position: relative;
+    overflow: hidden;
+}
+
+.bg-gradient-to-r::before,
+button[class*="gradient"]::before,
+a[class*="gradient"]::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    z-index: -1;
 }

@@ -1,171 +1,222 @@
 {% extends "base.html" %}
 
-{% block title %}Recommendation{% endblock %}
+{% block title %}Compare Plans{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl font-semibold text-slate-900 mb-1">Step 3 · Compare options</h1>
-<p class="text-sm text-slate-600 mb-4">
-    Based on your age and preferences, we calculated the monthly cost for both gyms.
-    The recommended option is highlighted below.
-</p>
+<!-- Header Section -->
+<div class="text-center mb-8 sm:mb-12 animate-fade-in">
+    <div class="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-1.5 text-xs font-semibold text-emerald-800 mb-4">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+        Step 3 of 5 · Compare Plans
+    </div>
+    <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 mb-4">
+        Choose the right plan for you
+    </h1>
+    <p class="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto">
+        Based on your preferences, here's a side-by-side comparison. We've highlighted the best value option for you.
+    </p>
+</div>
 
 {% if pricing.recommended_savings_per_month and pricing.recommended_savings_per_month > 0 %}
-    <div class="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800 mb-4"
-         role="status" aria-live="polite">
-        <span class="inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-        <span>
-            {{ pricing.gyms[recommended_gym].gym_name }} saves you
-            {{ format_currency(pricing.recommended_savings_per_month) }}/month
-            compared to {{ pricing.gyms[pricing.recommended_vs].gym_name }}.
-        </span>
+    <div class="mb-8 rounded-2xl bg-gradient-to-r from-emerald-50 to-sky-50 border border-emerald-200 p-4 sm:p-6 text-center animate-fade-in animation-delay-200">
+        <div class="flex items-center justify-center gap-3 mb-2">
+            <svg class="w-6 h-6 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+            </svg>
+            <h2 class="text-lg sm:text-xl font-bold text-slate-900">Save {{ format_currency(pricing.recommended_savings_per_month) }}/month</h2>
+        </div>
+        <p class="text-sm sm:text-base text-slate-700">
+            {{ pricing.gyms[recommended_gym].gym_name }} is <span class="font-semibold">{{ format_currency(pricing.recommended_savings_per_month) }} cheaper per month</span> than {{ pricing.gyms[pricing.recommended_vs].gym_name }}
+        </p>
     </div>
 {% endif %}
 
-<div class="cards-grid two-columns">
-    {% for gym_key, gym_data in pricing.gyms.items() %}
-        {% set is_recommended = (gym_key == recommended_gym) %}
-        <article class="relative rounded-2xl border border-slate-200 bg-white/80 backdrop-blur p-5 shadow-sm space-y-4 {% if is_recommended %}ring-2 ring-emerald-300/70 bg-emerald-50/50{% endif %}">
-            <header class="flex items-center justify-between mb-1">
-                <h2 class="text-lg font-semibold text-slate-900">{{ gym_data.gym_name }}</h2>
-                {% if is_recommended %}
-                    <span class="inline-flex items-center rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-semibold">
-                        Recommended
-                    </span>
-                {% endif %}
-            </header>
-
-            <div class="flex items-baseline justify-between text-sm mb-1">
-                <div class="text-slate-600">
-                    <p>Monthly total (after discounts)</p>
-                    <p class="text-xs text-slate-500">One‑off joining fee shown separately</p>
-                </div>
-                <div class="text-right">
-                    <p class="text-lg font-semibold text-sky-700">
-                        {{ format_currency(gym_data.monthly_total_after_discount) }}
-                    </p>
-                    <p class="text-xs text-slate-500">
-                        Joining: {{ format_currency(gym_data.joining_fee) }}
-                    </p>
-                </div>
-            </div>
-
-            <div class="card-body">
-                <div class="table-wrap" role="region" aria-label="{{ gym_data.gym_name }} pricing breakdown">
-                    <table class="pricing-table w-full text-xs md:text-sm border-separate border-spacing-y-1">
-                        <colgroup>
-                            <col class="col-item">
-                            <col class="col-context">
-                            <col class="col-price">
-                            <col class="col-discount">
-                            <col class="col-final">
-                        </colgroup>
-                        <thead class="text-[11px] uppercase tracking-wide text-slate-500">
-                            <tr>
-                                <th scope="col">Item</th>
-                                <th scope="col">Context</th>
-                                <th scope="col" class="num">Price</th>
-                                <th scope="col" class="num">Discount</th>
-                                <th scope="col" class="num">Final</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-slate-700">
-                            {% if gym_data.wants_gym %}
-                                <tr>
-                                    <th scope="row">{{ gym_data.gym_plan_label }}</th>
-                                    <td>Gym membership</td>
-                                    <td class="num">{{ format_currency(gym_data.base_gym_price) }}</td>
-                                    <td class="num">
-                                        {% if gym_data.base_discount > 0 %}
-                                            -{{ format_currency(gym_data.base_discount) }}
-                                        {% else %}
-                                            —
-                                        {% endif %}
-                                    </td>
-                                    <td class="num">{{ format_currency(gym_data.base_final) }}</td>
-                                </tr>
-                            {% else %}
-                                <tr>
-                                    <th scope="row">Gym membership</th>
-                                    <td>Not selected</td>
-                                    <td class="num">£0.00</td>
-                                    <td class="num">—</td>
-                                    <td class="num">£0.00</td>
-                                </tr>
-                            {% endif %}
-
-                            {% if gym_data.addons %}
-                                {% for addon in gym_data.addons %}
-                                    <tr>
-                                        <th scope="row">{{ addon.label }}</th>
-                                        <td>{{ addon.context }}</td>
-                                        <td class="num">{{ format_currency(addon.price) }}</td>
-                                        <td class="num">
-                                            {% if addon.discount_applied %}
-                                                -{{ format_currency(addon.discount) }}
-                                            {% else %}
-                                                —
-                                            {% endif %}
-                                        </td>
-                                        <td class="num">{{ format_currency(addon.final_price) }}</td>
-                                    </tr>
-                                {% endfor %}
-                            {% endif %}
-
-                            <tr class="font-semibold bg-slate-50">
-                                <th scope="row" colspan="2" class="py-2 pl-2">Monthly subtotal (before discounts)</th>
-                                <td class="num">{{ format_currency(gym_data.monthly_total_before_discount) }}</td>
-                                <td class="num">—</td>
-                                <td class="num"></td>
-                            </tr>
-                            <tr class="bg-slate-50">
-                                <th scope="row" colspan="2" class="py-2 pl-2">Total discount applied</th>
-                                <td class="num"></td>
-                                <td class="num">-{{ format_currency(gym_data.discount_total) }}</td>
-                                <td class="num"></td>
-                            </tr>
-                            <tr class="tfoot-strong bg-sky-50">
-                                <th scope="row" colspan="2" class="py-2 pl-2">Monthly total (after discounts)</th>
-                                <td class="num"></td>
-                                <td class="num"></td>
-                                <td class="num">{{ format_currency(gym_data.monthly_total_after_discount) }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </article>
-    {% endfor %}
-</div>
-
-<form method="post" class="form-card choose-gym bg-white/90 backdrop-blur border border-slate-200 shadow-sm mt-4">
-    <h2 class="text-base font-semibold text-slate-900 mb-1">Choose your gym to continue</h2>
-    <p class="hint mb-2">
-        We recommend <strong>{{ pricing.gyms[recommended_gym].gym_name }}</strong>, but you can
-        select either option below.
-    </p>
-    <div class="radio-group">
+<!-- Pricing Cards -->
+<form method="post" class="mb-8">
+    <div class="grid md:grid-cols-2 gap-6 sm:gap-8 max-w-6xl mx-auto">
         {% for gym_key, gym_data in pricing.gyms.items() %}
-            <label class="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 hover:border-sky-400 cursor-pointer">
-                <input type="radio" name="chosen_gym" value="{{ gym_key }}"
-                       {% if chosen_gym == gym_key %}checked{% endif %}
-                       class="rounded-full border-slate-300 text-sky-600 focus:ring-sky-500">
-                <span class="text-sm">
-                    <span class="font-medium text-slate-900">{{ gym_data.gym_name }}</span>
-                    <span class="text-slate-600"> — {{ format_currency(gym_data.monthly_total_after_discount) }}/month</span>
-                </span>
-            </label>
+            {% set is_recommended = (gym_key == recommended_gym) %}
+            
+            <div class="relative group">
+                <!-- Recommended Badge -->
+                {% if is_recommended %}
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                        <div class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-1.5 text-xs font-bold text-white shadow-lg">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            Recommended
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Pricing Card -->
+                <label class="block cursor-pointer">
+                    <input type="radio" name="chosen_gym" value="{{ gym_key }}" 
+                           {% if gym_key == chosen_gym %}checked{% endif %}
+                           class="sr-only peer">
+                    
+                    <div class="relative rounded-2xl border-2 transition-all duration-300
+                                {% if is_recommended %}
+                                    border-emerald-400 bg-gradient-to-br from-emerald-50/50 to-white shadow-xl
+                                    peer-checked:ring-4 peer-checked:ring-emerald-200
+                                {% else %}
+                                    border-slate-200 bg-white shadow-lg
+                                    peer-checked:border-sky-500 peer-checked:ring-4 peer-checked:ring-sky-200
+                                {% endif %}
+                                hover:shadow-2xl hover:-translate-y-2 peer-checked:scale-[1.02]">
+                        
+                        <div class="p-6 sm:p-8">
+                            <!-- Header -->
+                            <div class="text-center mb-6">
+                                <h3 class="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
+                                    {{ gym_data.gym_name }}
+                                </h3>
+                                <div class="flex items-baseline justify-center gap-2 mb-4">
+                                    <span class="text-5xl sm:text-6xl font-extrabold text-slate-900">
+                                        {{ format_currency(gym_data.monthly_total_after_discount).split('.')[0] }}
+                                    </span>
+                                    <div class="text-left">
+                                        <span class="text-xl font-semibold text-slate-900">.{{ format_currency(gym_data.monthly_total_after_discount).split('.')[1] if '.' in format_currency(gym_data.monthly_total_after_discount) else '00' }}</span>
+                                        <span class="block text-sm text-slate-600">/month</span>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-slate-600">
+                                    One-time joining fee: <span class="font-semibold text-slate-900">{{ format_currency(gym_data.joining_fee) }}</span>
+                                </p>
+                            </div>
+
+                            <!-- Divider -->
+                            <div class="border-t border-slate-200 mb-6"></div>
+
+                            <!-- What's Included -->
+                            <div class="space-y-4 mb-6">
+                                <h4 class="text-sm font-bold text-slate-900 uppercase tracking-wide">What's included</h4>
+                                
+                                {% if gym_data.wants_gym %}
+                                    <div class="flex items-start gap-3">
+                                        <svg class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                        </svg>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-medium text-slate-900">{{ gym_data.gym_plan_label }}</p>
+                                            <p class="text-xs text-slate-600">Full gym access</p>
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                {% for addon in gym_data.addons %}
+                                    <div class="flex items-start gap-3">
+                                        <svg class="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                        </svg>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-medium text-slate-900">{{ addon.label }}</p>
+                                            {% if addon.discount_applied %}
+                                                <p class="text-xs text-emerald-600">
+                                                    <span class="line-through text-slate-400">{{ format_currency(addon.price) }}</span>
+                                                    → {{ format_currency(addon.final_price) }}
+                                                    <span class="font-semibold">(Save {{ format_currency(addon.discount) }})</span>
+                                                </p>
+                                            {% else %}
+                                                <p class="text-xs text-slate-600">{{ format_currency(addon.final_price) }}/month</p>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+
+                                {% if gym_data.discount_category_label %}
+                                    <div class="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                                        <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/>
+                                        </svg>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-medium text-amber-900">{{ gym_data.discount_category_label }} discount applied</p>
+                                            <p class="text-xs text-amber-700">You saved {{ format_currency(gym_data.total_discount) }}/month</p>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Select Button -->
+                            <div class="pt-4">
+                                <div class="w-full rounded-lg py-3 px-4 text-center font-semibold transition-all
+                                            {% if is_recommended %}
+                                                bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg hover:shadow-xl
+                                                peer-checked:from-emerald-700 peer-checked:to-emerald-600
+                                            {% else %}
+                                                bg-slate-100 text-slate-700 hover:bg-slate-200
+                                                peer-checked:bg-sky-600 peer-checked:text-white peer-checked:shadow-lg
+                                            {% endif %}">
+                                    {% if gym_key == chosen_gym %}
+                                        <span class="flex items-center justify-center gap-2">
+                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                            </svg>
+                                            Selected
+                                        </span>
+                                    {% else %}
+                                        Select this plan
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </label>
+            </div>
         {% endfor %}
     </div>
 
-    <div class="form-actions flex items-center justify-between pt-1">
-        <a href="{{ url_for('preferences') }}" class="text-xs text-slate-500 hover:text-slate-700">
-            ← Back to preferences
+    <!-- Action Buttons -->
+    <div class="flex items-center justify-between mt-12 pt-6 border-t border-slate-200 max-w-6xl mx-auto">
+        <a href="{{ url_for('preferences') }}" 
+           class="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to preferences
         </a>
         <button type="submit"
-                class="btn btn-primary inline-flex items-center justify-center px-5 py-2 rounded-full bg-sky-600 text-white text-sm font-medium shadow hover:bg-sky-700 transition">
+                class="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-lg bg-sky-600 text-white font-bold shadow-lg hover:bg-sky-700 hover:shadow-xl hover:scale-105 transition-all duration-200">
             Continue to confirmation
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
         </button>
     </div>
 </form>
-{% endblock %}
 
+<script>
+// Update button text when radio buttons change
+document.addEventListener('DOMContentLoaded', function() {
+    const radioButtons = document.querySelectorAll('input[name="chosen_gym"]');
+    
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Update all buttons
+            radioButtons.forEach(r => {
+                const button = r.closest('label').querySelector('div[class*="rounded-lg"]');
+                const gymKey = r.value;
+                
+                if (r.checked) {
+                    // Selected state
+                    button.innerHTML = `
+                        <span class="flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                            Selected
+                        </span>
+                    `;
+                } else {
+                    // Unselected state
+                    button.textContent = 'Select this plan';
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

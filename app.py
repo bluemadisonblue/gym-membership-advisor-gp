@@ -55,9 +55,15 @@ def home():
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
+    from datetime import datetime, date
+    
+    # Calculate max date (today - 16 years) for the date picker
+    today = date.today()
+    max_date = date(today.year - 16, today.month, today.day)
+    
     if request.method == "POST":
         full_name = (request.form.get("full_name") or "").strip()
-        age_raw = (request.form.get("age") or "").strip()
+        date_of_birth_raw = (request.form.get("date_of_birth") or "").strip()
         is_student = bool(request.form.get("is_student"))
 
         errors = []
@@ -66,15 +72,23 @@ def signup():
             errors.append("Full name is required.")
 
         age = None
-        if not age_raw:
-            errors.append("Age is required.")
+        date_of_birth = None
+        if not date_of_birth_raw:
+            errors.append("Date of birth is required.")
         else:
             try:
-                age = int(age_raw)
+                date_of_birth = datetime.strptime(date_of_birth_raw, "%Y-%m-%d").date()
+                # Calculate age
+                today = date.today()
+                age = today.year - date_of_birth.year
+                # Adjust if birthday hasn't occurred yet this year
+                if (today.month, today.day) < (date_of_birth.month, date_of_birth.day):
+                    age -= 1
+                    
                 if age < 0:
-                    errors.append("Age must be a positive number.")
+                    errors.append("Invalid date of birth.")
             except ValueError:
-                errors.append("Age must be a whole number.")
+                errors.append("Invalid date format.")
 
         if age is not None and age < 16:
             errors.append("We are sorry, but users under 16 cannot sign up for a membership.")
@@ -86,8 +100,9 @@ def signup():
             return render_template(
                 "signup.html",
                 full_name=full_name,
-                age=age_raw,
+                date_of_birth=date_of_birth_raw,
                 is_student=is_student,
+                max_date=max_date.isoformat(),
             )
 
         # Derive flags
@@ -107,6 +122,7 @@ def signup():
         return redirect(url_for("preferences"))
 
     # GET
+    return render_template("signup.html", max_date=max_date.isoformat())
     saved = session.get("signup", {})
     return render_template(
         "signup.html",

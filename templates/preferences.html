@@ -5,104 +5,199 @@
 {% block content %}
 <div class="max-w-7xl mx-auto">
     <!-- Header -->
-    <div class="text-center mb-8">
-        <div class="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-1.5 text-xs font-semibold text-emerald-800 mb-3">
+    <div class="text-center mb-8 sm:mb-12">
+        <div class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-1.5 text-xs font-semibold text-slate-700 mb-4">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
             </svg>
             Step 2 of 5
         </div>
-        <h1 class="text-3xl font-bold text-slate-900 mb-2">Membership Preferences</h1>
-        <p class="text-slate-600">
-            Choose your gym plan and add-ons. We'll compare both gyms and recommend the best option.
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 mb-4">
+            Customize Your Membership
+        </h1>
+        <p class="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto">
+            Select your ideal gym plan and add-ons. We'll find the best deal for you across both gyms.
         </p>
     </div>
 
     <div class="grid lg:grid-cols-[1.2fr,1fr] gap-8">
         <!-- Form Column -->
         <div>
-            <form method="post" class="rounded-2xl bg-white border border-slate-200 shadow-lg p-6 space-y-6" novalidate>
-    <fieldset class="form-group fieldset-card">
-        <legend>Gym membership</legend>
-        <div class="radio-group">
-            <label class="radio-card">
-                <input type="radio" name="wants_gym" value="yes"
-                       {% if wants_gym == 'yes' %}checked{% endif %}>
-                <span>
-                    <strong>I want a gym membership</strong>
-                    <span class="hint">Choose a time band below.</span>
-                </span>
-            </label>
-            <label class="radio-card">
-                <input type="radio" name="wants_gym" value="no"
-                       {% if wants_gym != 'yes' %}checked{% endif %}>
-                <span>
-                    <strong>Add-ons only</strong>
-                    <span class="hint">No gym plan; add-ons priced without gym membership.</span>
-                </span>
-            </label>
-        </div>
+            <form method="post" class="space-y-6" novalidate>
+                <!-- Gym Membership Section -->
+                <div class="rounded-2xl bg-white border border-slate-200 shadow-lg p-6 sm:p-8 hover:shadow-xl transition-shadow">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center shadow-md">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-bold text-slate-900">Gym Membership</h2>
+                            <p class="text-sm text-slate-500">Choose your access level</p>
+                        </div>
+                    </div>
 
-        <div class="form-group">
-            <label for="gym_band">If you selected a gym membership, pick a time band</label>
-            <select class="input" id="gym_band" name="gym_band" {% if wants_gym == 'yes' %}required{% endif %}>
-                <option value="">-- Select time band --</option>
-                <option value="super_off_peak" {% if gym_band == 'super_off_peak' %}selected{% endif %}>
-                    Super off-peak (10-12 &amp; 2-4)
-                </option>
-                <option value="off_peak" {% if gym_band == 'off_peak' %}selected{% endif %}>
-                    Off-peak (12-2 &amp; 8-11)
-                </option>
-                <option value="anytime" {% if gym_band == 'anytime' %}selected{% endif %}>
-                    Anytime
-                </option>
-            </select>
-            <small class="hint">
-                Leave blank if you chose not to have a gym membership; otherwise this is required.
-            </small>
-        </div>
-    </fieldset>
+                    <!-- Radio Options -->
+                    <div class="space-y-3 mb-6">
+                        <label class="relative flex items-start p-5 rounded-xl border-2 border-slate-200 cursor-pointer transition-all hover:border-slate-400 hover:shadow-md has-[:checked]:border-slate-900 has-[:checked]:bg-slate-50 has-[:checked]:shadow-lg group">
+                            <input type="radio" name="wants_gym" value="yes"
+                                   {% if wants_gym == 'yes' %}checked{% endif %}
+                                   class="sr-only">
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-base font-bold text-slate-900">Full Gym Access</span>
+                                    <div class="w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center group-has-[:checked]:border-slate-900 group-has-[:checked]:bg-slate-900 transition-all">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 group-has-[:checked]:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-slate-600">Get access to gym facilities - select a time band below</p>
+                            </div>
+                        </label>
 
-    <fieldset class="form-group fieldset-card">
-        <legend>Add-ons</legend>
-        <p class="hint">
-            Add-ons are priced differently depending on whether you have a gym membership.
-            We will automatically use the correct price ("with gym membership" or "without gym membership")
-            based on your choice above.
-        </p>
+                        <label class="relative flex items-start p-5 rounded-xl border-2 border-slate-200 cursor-pointer transition-all hover:border-slate-400 hover:shadow-md has-[:checked]:border-slate-900 has-[:checked]:bg-slate-50 has-[:checked]:shadow-lg group">
+                            <input type="radio" name="wants_gym" value="no"
+                                   {% if wants_gym != 'yes' %}checked{% endif %}
+                                   class="sr-only">
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-base font-bold text-slate-900">Add-ons Only</span>
+                                    <div class="w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center group-has-[:checked]:border-slate-900 group-has-[:checked]:bg-slate-900 transition-all">
+                                        <svg class="w-3.5 h-3.5 text-white opacity-0 group-has-[:checked]:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-slate-600">No gym access, just add-ons (priced without membership)</p>
+                            </div>
+                        </label>
+                    </div>
 
-        <div class="checkbox-grid">
-            <label class="checkbox-card">
-                <input type="checkbox" name="swim" value="1" {% if add_swim %}checked{% endif %}>
-                <span><strong>Swimming pool</strong></span>
-            </label>
-            <label class="checkbox-card">
-                <input type="checkbox" name="classes" value="1" {% if add_classes %}checked{% endif %}>
-                <span><strong>Classes</strong></span>
-            </label>
-            <label class="checkbox-card">
-                <input type="checkbox" name="massage" value="1" {% if add_massage %}checked{% endif %}>
-                <span><strong>Massage therapy</strong></span>
-            </label>
-            <label class="checkbox-card">
-                <input type="checkbox" name="physio" value="1" {% if add_physio %}checked{% endif %}>
-                <span><strong>Physiotherapy</strong></span>
-            </label>
-        </div>
-    </fieldset>
+                    <!-- Time Band Select -->
+                    <div class="relative">
+                        <label for="gym_band" class="block text-sm font-semibold text-slate-900 mb-2">
+                            <svg class="w-4 h-4 inline-block mr-1 text-slate-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"/>
+                            </svg>
+                            Time Band Selection
+                        </label>
+                        <select class="w-full px-4 py-3.5 rounded-xl border-2 border-slate-300 bg-white text-slate-900 font-medium focus:border-slate-900 focus:ring-4 focus:ring-slate-200 transition-all appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e')] bg-[length:1.5em] bg-[right_0.5rem_center] bg-no-repeat pr-12" 
+                                id="gym_band" name="gym_band" {% if wants_gym == 'yes' %}required{% endif %}>
+                            <option value="">-- Select your preferred time --</option>
+                            <option value="super_off_peak" {% if gym_band == 'super_off_peak' %}selected{% endif %}>
+                                Super Off-Peak (10am-12pm & 2pm-4pm)
+                            </option>
+                            <option value="off_peak" {% if gym_band == 'off_peak' %}selected{% endif %}>
+                                Off-Peak (12pm-2pm & 8pm-11pm)
+                            </option>
+                            <option value="anytime" {% if gym_band == 'anytime' %}selected{% endif %}>
+                                Anytime (Full access 24/7)
+                            </option>
+                        </select>
+                        <p class="mt-2 text-xs text-slate-500 flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"/>
+                            </svg>
+                            Required if you selected gym membership above
+                        </p>
+                    </div>
+                </div>
 
-                <div class="form-actions flex items-center justify-between pt-4 border-t border-slate-200">
-                    <a href="{{ url_for('signup') }}" class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition">
+                <!-- Add-ons Section -->
+                <div class="rounded-2xl bg-white border border-slate-200 shadow-lg p-6 sm:p-8 hover:shadow-xl transition-shadow">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center shadow-md">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-bold text-slate-900">Add-Ons & Extras</h2>
+                            <p class="text-sm text-slate-500">Enhance your membership</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-6 rounded-xl bg-slate-50 border border-slate-200 p-4">
+                        <p class="text-xs text-slate-700 flex items-start gap-2">
+                            <svg class="w-4 h-4 flex-shrink-0 mt-0.5 text-slate-600" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"/>
+                            </svg>
+                            <span>Add-ons are priced differently with or without gym membership. We'll automatically apply the correct pricing.</span>
+                        </p>
+                    </div>
+
+                    <!-- Checkbox Grid -->
+                    <div class="grid sm:grid-cols-2 gap-3">
+                        <label class="relative flex items-center p-5 rounded-xl border-2 border-slate-200 cursor-pointer transition-all hover:border-slate-400 hover:shadow-md has-[:checked]:border-slate-900 has-[:checked]:bg-slate-50 has-[:checked]:shadow-lg group">
+                            <input type="checkbox" name="swim" value="1" {% if add_swim %}checked{% endif %}
+                                   class="sr-only">
+                            <div class="flex-1">
+                                <span class="text-base font-bold text-slate-900">Swimming Pool</span>
+                            </div>
+                            <div class="w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center group-has-[:checked]:border-slate-900 group-has-[:checked]:bg-slate-900 transition-all ml-2">
+                                <svg class="w-3.5 h-3.5 text-white opacity-0 group-has-[:checked]:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </div>
+                        </label>
+
+                        <label class="relative flex items-center p-5 rounded-xl border-2 border-slate-200 cursor-pointer transition-all hover:border-slate-400 hover:shadow-md has-[:checked]:border-slate-900 has-[:checked]:bg-slate-50 has-[:checked]:shadow-lg group">
+                            <input type="checkbox" name="classes" value="1" {% if add_classes %}checked{% endif %}
+                                   class="sr-only">
+                            <div class="flex-1">
+                                <span class="text-base font-bold text-slate-900">Classes</span>
+                            </div>
+                            <div class="w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center group-has-[:checked]:border-slate-900 group-has-[:checked]:bg-slate-900 transition-all ml-2">
+                                <svg class="w-3.5 h-3.5 text-white opacity-0 group-has-[:checked]:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </div>
+                        </label>
+
+                        <label class="relative flex items-center p-5 rounded-xl border-2 border-slate-200 cursor-pointer transition-all hover:border-slate-400 hover:shadow-md has-[:checked]:border-slate-900 has-[:checked]:bg-slate-50 has-[:checked]:shadow-lg group">
+                            <input type="checkbox" name="massage" value="1" {% if add_massage %}checked{% endif %}
+                                   class="sr-only">
+                            <div class="flex-1">
+                                <span class="text-base font-bold text-slate-900">Massage Therapy</span>
+                            </div>
+                            <div class="w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center group-has-[:checked]:border-slate-900 group-has-[:checked]:bg-slate-900 transition-all ml-2">
+                                <svg class="w-3.5 h-3.5 text-white opacity-0 group-has-[:checked]:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </div>
+                        </label>
+
+                        <label class="relative flex items-center p-5 rounded-xl border-2 border-slate-200 cursor-pointer transition-all hover:border-slate-400 hover:shadow-md has-[:checked]:border-slate-900 has-[:checked]:bg-slate-50 has-[:checked]:shadow-lg group">
+                            <input type="checkbox" name="physio" value="1" {% if add_physio %}checked{% endif %}
+                                   class="sr-only">
+                            <div class="flex-1">
+                                <span class="text-base font-bold text-slate-900">Physiotherapy</span>
+                            </div>
+                            <div class="w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center group-has-[:checked]:border-slate-900 group-has-[:checked]:bg-slate-900 transition-all ml-2">
+                                <svg class="w-3.5 h-3.5 text-white opacity-0 group-has-[:checked]:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+                    <a href="{{ url_for('signup') }}" 
+                       class="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 font-medium transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                         </svg>
                         Back to signup
                     </a>
                     <button type="submit"
-                            class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-sky-600 text-white font-semibold shadow-lg hover:bg-sky-700 hover:shadow-xl hover:scale-105 transition-all duration-200">
-                        See recommendation
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-slate-900 text-white font-bold text-lg shadow-xl hover:bg-slate-800 hover:shadow-2xl hover:scale-105 transition-all duration-200">
+                        Compare Plans
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                         </svg>
                     </button>
                 </div>
@@ -111,10 +206,9 @@
 
         <!-- Video/Info Column -->
         <div class="lg:sticky lg:top-8 h-fit space-y-6">
-            <!-- Video Section (Vertical Video) -->
-            <div class="overflow-hidden rounded-2xl shadow-lg">
+            <!-- Video Section -->
+            <div class="overflow-hidden rounded-2xl shadow-2xl border border-slate-200">
                 <div class="relative" style="height: 500px;">
-                    <!-- Vertical Video -->
                     <video 
                         class="w-full h-full object-cover"
                         autoplay 
@@ -125,51 +219,54 @@
                         <source src="{{ url_for('static', filename='videos/swimming-pool.mp4') }}" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
-                    
-                    <!-- Mute/Unmute Button -->
-                    <button 
-                        onclick="const video = this.parentElement.querySelector('video'); video.muted = !video.muted; this.querySelector('.unmuted').classList.toggle('hidden'); this.querySelector('.muted').classList.toggle('hidden');" 
-                        class="absolute bottom-4 right-4 w-10 h-10 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white hover:bg-black/80 transition-all hover:scale-110">
-                        <svg class="w-5 h-5 unmuted" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z"/>
-                        </svg>
-                        <svg class="w-5 h-5 muted hidden" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM12.293 7.293a1 1 0 011.414 0L15 8.586l1.293-1.293a1 1 0 111.414 1.414L16.414 10l1.293 1.293a1 1 0 01-1.414 1.414L15 11.414l-1.293 1.293a1 1 0 01-1.414-1.414L13.586 10l-1.293-1.293a1 1 0 010-1.414z"/>
-                        </svg>
-                    </button>
-                </div>
-                <div class="px-2 py-3 bg-slate-900/50">
-                    <p class="text-slate-300 text-sm flex items-center gap-2">
-                        <svg class="w-4 h-4 text-sky-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"/>
-                        </svg>
-                        <span>Swimming pool facilities</span>
-                    </p>
+
+                    <!-- Video Label -->
+                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                        <p class="text-white text-sm font-medium">Premium Swimming Pool Facilities</p>
+                    </div>
                 </div>
             </div>
 
             <!-- Info Cards -->
             <div class="space-y-4">
-                <div class="rounded-xl bg-sky-50 border border-sky-200 p-4">
-                    <div class="flex items-start gap-3">
-                        <svg class="w-5 h-5 text-sky-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"/>
-                        </svg>
+                <div class="rounded-xl bg-white border border-slate-200 p-5 hover:shadow-lg transition-shadow">
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center flex-shrink-0 shadow-md">
+                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"/>
+                            </svg>
+                        </div>
                         <div>
-                            <h3 class="text-sm font-semibold text-sky-900 mb-1">Time Bands Explained</h3>
-                            <p class="text-xs text-sky-700">Choose based on when you plan to visit the gym</p>
+                            <h3 class="text-base font-bold text-slate-900 mb-1">Time Bands Explained</h3>
+                            <p class="text-sm text-slate-600 leading-relaxed">Choose based on when you plan to visit. More restricted hours = lower cost!</p>
                         </div>
                     </div>
                 </div>
                 
-                <div class="rounded-xl bg-purple-50 border border-purple-200 p-4">
-                    <div class="flex items-start gap-3">
-                        <svg class="w-5 h-5 text-purple-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
-                        </svg>
+                <div class="rounded-xl bg-white border border-slate-200 p-5 hover:shadow-lg transition-shadow">
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center flex-shrink-0 shadow-md">
+                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z"/>
+                            </svg>
+                        </div>
                         <div>
-                            <h3 class="text-sm font-semibold text-purple-900 mb-1">Add-ons Pricing</h3>
-                            <p class="text-xs text-purple-700">Different rates with or without gym membership</p>
+                            <h3 class="text-base font-bold text-slate-900 mb-1">Smart Pricing</h3>
+                            <p class="text-sm text-slate-600 leading-relaxed">Add-ons cost less when combined with gym membership. We calculate it automatically!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rounded-xl bg-white border border-slate-200 p-5 hover:shadow-lg transition-shadow">
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-lg bg-slate-900 flex items-center justify-center flex-shrink-0 shadow-md">
+                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900 mb-1">Auto Discounts</h3>
+                            <p class="text-sm text-slate-600 leading-relaxed">Student, young adult, and senior discounts applied automatically based on your age!</p>
                         </div>
                     </div>
                 </div>
@@ -197,4 +294,3 @@
     })();
 </script>
 {% endblock %}
-
