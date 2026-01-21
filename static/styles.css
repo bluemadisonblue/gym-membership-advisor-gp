@@ -1401,14 +1401,14 @@ select:focus {
 /* Dots Indicator */
 .carousel-dots {
     position: absolute;
-    bottom: 24px;
+    bottom: 80px; /* Moved up to not overlap with text */
     left: 50%;
     transform: translateX(-50%);
-    z-index: 10;
+    z-index: 20;
     display: flex;
     gap: 12px;
     padding: 12px 20px;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(10px);
     border-radius: 999px;
 }
@@ -1452,7 +1452,7 @@ select:focus {
     }
     
     .carousel-dots {
-        bottom: 20px;
+        bottom: 75px; /* Position above text on tablet */
         gap: 10px;
         padding: 10px 18px;
     }
@@ -1488,9 +1488,9 @@ select:focus {
     }
     
     .carousel-dots {
-        bottom: 12px;
+        bottom: 70px; /* Position above text on mobile */
         gap: 6px;
-        padding: 6px 12px;
+        padding: 8px 14px;
     }
     
     .carousel-dot {
