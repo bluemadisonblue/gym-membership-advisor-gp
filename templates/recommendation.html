@@ -188,35 +188,4 @@
     </div>
 </form>
 
-<script>
-// Update button text when radio buttons change
-document.addEventListener('DOMContentLoaded', function() {
-    const radioButtons = document.querySelectorAll('input[name="chosen_gym"]');
-    
-    radioButtons.forEach(radio => {
-        radio.addEventListener('change', function() {
-            // Update all buttons
-            radioButtons.forEach(r => {
-                const button = r.closest('label').querySelector('div[class*="rounded-lg"]');
-                const gymKey = r.value;
-                
-                if (r.checked) {
-                    // Selected state
-                    button.innerHTML = `
-                        <span class="flex items-center justify-center gap-2">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                            </svg>
-                            Selected
-                        </span>
-                    `;
-                } else {
-                    // Unselected state
-                    button.textContent = 'Select this plan';
-                }
-            });
-        });
-    });
-});
-</script>
 {% endblock %}

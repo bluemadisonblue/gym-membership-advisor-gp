@@ -5,7 +5,7 @@
 {% block content %}
 <!-- Hero Section -->
 <section class="relative overflow-hidden">
-    <div class="relative px-4 py-12 sm:px-6 sm:py-16 md:px-12 md:py-24">
+    <div class="relative px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-16 md:px-12 md:pt-12 md:pb-24">
         <!-- Main hero content -->
         <div class="mx-auto max-w-4xl text-center space-y-6 sm:space-y-8 md:space-y-10">
             <!-- Badge - Fade in -->
@@ -76,12 +76,18 @@
 <!-- Image Carousel Section -->
 <section class="mt-8 sm:mt-12 md:mt-16 animate-fade-in animation-delay-800">
     <div class="relative rounded-2xl overflow-hidden shadow-2xl">
-        <!-- Carousel Container -->
+        <!-- CSS-only Carousel Container -->
         <div class="carousel-container relative">
+            <!-- Radio buttons for slide control (hidden) -->
+            <input type="radio" name="carousel-slide" id="slide-1" class="carousel-radio" checked>
+            <input type="radio" name="carousel-slide" id="slide-2" class="carousel-radio">
+            <input type="radio" name="carousel-slide" id="slide-3" class="carousel-radio">
+            <input type="radio" name="carousel-slide" id="slide-4" class="carousel-radio">
+            
             <!-- Carousel Slides -->
-            <div class="carousel-track" id="carouselTrack">
+            <div class="carousel-track">
                 <!-- Slide 1 -->
-                <div class="carousel-slide active">
+                <label for="slide-1" class="carousel-slide">
                     <div class="relative h-64 sm:h-80 md:h-96 lg:h-[500px]">
                         <img src="{{ url_for('static', filename='images/1.jpg') }}" 
                              alt="Gym management platform" 
@@ -93,10 +99,10 @@
                             <p class="text-sm md:text-base text-white">State-of-the-art facilities and equipment</p>
                         </div>
                     </div>
-                </div>
+                </label>
                 
                 <!-- Slide 2 -->
-                <div class="carousel-slide">
+                <label for="slide-2" class="carousel-slide">
                     <div class="relative h-64 sm:h-80 md:h-96 lg:h-[500px]">
                         <img src="{{ url_for('static', filename='images/2.jpg') }}" 
                              alt="Mobile gym membership" 
@@ -108,10 +114,10 @@
                             <p class="text-sm md:text-base text-white">Manage your membership on the go</p>
                         </div>
                     </div>
-                </div>
+                </label>
                 
                 <!-- Slide 3 -->
-                <div class="carousel-slide">
+                <label for="slide-3" class="carousel-slide">
                     <div class="relative h-64 sm:h-80 md:h-96 lg:h-[500px]">
                         <img src="{{ url_for('static', filename='images/3.jpg') }}" 
                              alt="Gym facilities" 
@@ -124,10 +130,10 @@
                             <p class="text-sm md:text-base text-white">Top-quality fitness equipment for all levels</p>
                         </div>
                     </div>
-                </div>
+                </label>
                 
                 <!-- Slide 4 -->
-                <div class="carousel-slide">
+                <label for="slide-4" class="carousel-slide">
                     <div class="relative h-64 sm:h-80 md:h-96 lg:h-[500px]">
                         <img src="{{ url_for('static', filename='images/4.jpg') }}" 
                              alt="Gym experience" 
@@ -140,112 +146,70 @@
                             <p class="text-sm md:text-base text-white">Everything you need for your fitness journey</p>
                         </div>
                     </div>
-                </div>
+                </label>
             </div>
             
-            <!-- Navigation Arrows -->
-            <button class="carousel-btn carousel-prev" onclick="moveCarousel(-1)" aria-label="Previous slide">
+            <!-- Navigation Arrows (CSS-only) - Show only relevant buttons -->
+            <!-- Prev button for slide 1 (goes to slide 4) -->
+            <label for="slide-4" class="carousel-btn carousel-prev carousel-prev-1" aria-label="Previous slide">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                 </svg>
-            </button>
-            <button class="carousel-btn carousel-next" onclick="moveCarousel(1)" aria-label="Next slide">
+            </label>
+            <!-- Prev button for slide 2 (goes to slide 1) -->
+            <label for="slide-1" class="carousel-btn carousel-prev carousel-prev-2" aria-label="Previous slide">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </label>
+            <!-- Prev button for slide 3 (goes to slide 2) -->
+            <label for="slide-2" class="carousel-btn carousel-prev carousel-prev-3" aria-label="Previous slide">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </label>
+            <!-- Prev button for slide 4 (goes to slide 3) -->
+            <label for="slide-3" class="carousel-btn carousel-prev carousel-prev-4" aria-label="Previous slide">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </label>
+            
+            <!-- Next button for slide 1 (goes to slide 2) -->
+            <label for="slide-2" class="carousel-btn carousel-next carousel-next-1" aria-label="Next slide">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
-            </button>
+            </label>
+            <!-- Next button for slide 2 (goes to slide 3) -->
+            <label for="slide-3" class="carousel-btn carousel-next carousel-next-2" aria-label="Next slide">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </label>
+            <!-- Next button for slide 3 (goes to slide 4) -->
+            <label for="slide-4" class="carousel-btn carousel-next carousel-next-3" aria-label="Next slide">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </label>
+            <!-- Next button for slide 4 (goes to slide 1) -->
+            <label for="slide-1" class="carousel-btn carousel-next carousel-next-4" aria-label="Next slide">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </label>
             
-            <!-- Dots Indicator -->
-            <div class="carousel-dots" id="carouselDots">
-                <button class="carousel-dot active" onclick="goToSlide(0)" aria-label="Go to slide 1"></button>
-                <button class="carousel-dot" onclick="goToSlide(1)" aria-label="Go to slide 2"></button>
-                <button class="carousel-dot" onclick="goToSlide(2)" aria-label="Go to slide 3"></button>
-                <button class="carousel-dot" onclick="goToSlide(3)" aria-label="Go to slide 4"></button>
+            <!-- Dots Indicator (CSS-only) -->
+            <div class="carousel-dots">
+                <label for="slide-1" class="carousel-dot" aria-label="Go to slide 1"></label>
+                <label for="slide-2" class="carousel-dot" aria-label="Go to slide 2"></label>
+                <label for="slide-3" class="carousel-dot" aria-label="Go to slide 3"></label>
+                <label for="slide-4" class="carousel-dot" aria-label="Go to slide 4"></label>
             </div>
         </div>
     </div>
 </section>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    let currentSlide = 0;
-    const slides = document.querySelectorAll('.carousel-slide');
-    const dots = document.querySelectorAll('.carousel-dot');
-    let autoplayInterval;
-
-    function showSlide(n) {
-        // Remove active class from all slides and dots
-        slides.forEach(slide => slide.classList.remove('active'));
-        dots.forEach(dot => dot.classList.remove('active'));
-        
-        // Handle wrapping
-        if (n >= slides.length) currentSlide = 0;
-        if (n < 0) currentSlide = slides.length - 1;
-        
-        // Add active class to current slide and dot
-        slides[currentSlide].classList.add('active');
-        dots[currentSlide].classList.add('active');
-    }
-
-    window.moveCarousel = function(direction) {
-        currentSlide += direction;
-        showSlide(currentSlide);
-        resetAutoplay();
-    }
-
-    window.goToSlide = function(n) {
-        currentSlide = n;
-        showSlide(currentSlide);
-        resetAutoplay();
-    }
-
-    function autoplay() {
-        currentSlide++;
-        showSlide(currentSlide);
-    }
-
-    function resetAutoplay() {
-        clearInterval(autoplayInterval);
-        autoplayInterval = setInterval(autoplay, 5000);
-    }
-
-    // Initialize autoplay
-    autoplayInterval = setInterval(autoplay, 5000);
-
-    // Pause autoplay on hover
-    document.querySelector('.carousel-container').addEventListener('mouseenter', () => {
-        clearInterval(autoplayInterval);
-    });
-
-    document.querySelector('.carousel-container').addEventListener('mouseleave', () => {
-        resetAutoplay();
-    });
-
-    // Keyboard navigation
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowLeft') moveCarousel(-1);
-        if (e.key === 'ArrowRight') moveCarousel(1);
-    });
-
-    // Touch support for mobile
-    let touchStartX = 0;
-    let touchEndX = 0;
-
-    document.querySelector('.carousel-container').addEventListener('touchstart', (e) => {
-        touchStartX = e.changedTouches[0].screenX;
-    });
-
-    document.querySelector('.carousel-container').addEventListener('touchend', (e) => {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
-    });
-
-    function handleSwipe() {
-        if (touchEndX < touchStartX - 50) moveCarousel(1);
-        if (touchEndX > touchStartX + 50) moveCarousel(-1);
-    }
-});
-</script>
 
 <!-- Why Choose Us Section -->
 <section class="mt-12 sm:mt-16 md:mt-20 animate-fade-in animation-delay-800">

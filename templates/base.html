@@ -14,23 +14,170 @@
     {# Tailwind via CDN so we can use utility classes alongside existing CSS #}
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        /* Mobile menu toggle (CSS-only) */
+        .mobile-menu-checkbox {
+            display: none;
+        }
+        
+        #mobile-menu {
+            display: none;
+        }
+        
+        /* Show mobile menu when checkbox is checked */
+        #mobile-menu-toggle:checked ~ #mobile-menu {
+            display: block !important;
+        }
+        
+        /* Banner toggle (CSS-only) - preserves layout space */
+        .banner-checkbox {
+            display: none;
+        }
+        
+        /* Hide banner content but preserve space to prevent layout shift */
+        #banner-toggle:checked ~ .banner-container #student-banner > div {
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        /* Ensure no underlines on header links */
+        header a {
+            text-decoration: none !important;
+        }
+        
+        header a:hover {
+            text-decoration: none !important;
+        }
+        
+        /* Ensure no underlines on banner link */
+        #student-banner a {
+            text-decoration: none !important;
+        }
+        
+        #student-banner a:hover {
+            text-decoration: none !important;
+        }
+    </style>
 </head>
 <body>
-<header class="site-header">
-    <div class="container header-content">
-        <div class="logo">
-            <span class="logo-main">uGym &amp; Power Zone</span>
-            <span class="logo-sub">Membership portal</span>
+<header class="relative z-50">
+    <input type="checkbox" id="mobile-menu-toggle" class="sr-only mobile-menu-checkbox">
+    <nav aria-label="Global" class="flex items-center justify-between p-6 lg:px-8">
+        <div class="flex lg:flex-1">
+            <a href="{{ url_for('home') }}" class="-m-1.5 p-1.5">
+                <span class="sr-only">uGym & Power Zone</span>
+                <div class="flex items-center gap-2">
+                    <div class="h-8 w-8 rounded-lg bg-black flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <!-- Left weight -->
+                            <rect x="2" y="7" width="4" height="10" rx="1" fill="currentColor"/>
+                            <!-- Right weight -->
+                            <rect x="18" y="7" width="4" height="10" rx="1" fill="currentColor"/>
+                            <!-- Center bar -->
+                            <rect x="6" y="11" width="12" height="2" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <span class="bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent font-semibold text-lg">uGym & Power Zone</span>
+                </div>
+            </a>
         </div>
-        <nav class="nav">
-            <a href="{{ url_for('home') }}" class="{% if request.endpoint == 'home' %}nav-active{% endif %}">Home</a>
-            <a href="{{ url_for('signup') }}" class="{% if request.endpoint in ['signup','preferences','recommendation','confirm','pay'] %}nav-active{% endif %}">Sign Up</a>
-            <a href="{{ url_for('access') }}" class="{% if request.endpoint in ['access','membership_details'] %}nav-active{% endif %}">Access Membership</a>
-        </nav>
+        <div class="flex lg:hidden">
+            <label for="mobile-menu-toggle" class="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 cursor-pointer">
+                <span class="sr-only">Open main menu</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="url(#header-gradient)" stroke-width="1.5" aria-hidden="true" class="w-6 h-6">
+                    <defs>
+                        <linearGradient id="header-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#0284c7;stop-opacity:1" />
+                            <stop offset="50%" style="stop-color:#0ea5e9;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#16a34a;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+            </label>
+        </div>
+        <div class="hidden lg:flex lg:gap-x-12">
+            <a href="{{ url_for('home') }}" class="text-sm font-semibold leading-6 bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent no-underline hover:no-underline">Home</a>
+            <a href="{{ url_for('access') }}" class="text-sm font-semibold leading-6 bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent no-underline hover:no-underline">Access Membership</a>
+        </div>
+        <div class="hidden lg:flex lg:flex-1 lg:justify-end">
+            <a href="{{ url_for('signup') }}" class="text-sm font-semibold leading-6 bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent no-underline hover:no-underline">Sign Up <span aria-hidden="true">→</span></a>
+        </div>
+    </nav>
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="lg:hidden fixed inset-0 z-50 hidden">
+        <label for="mobile-menu-toggle" class="fixed inset-0 bg-black/50 cursor-pointer"></label>
+        <div class="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-gray-900 p-6 sm:max-w-sm sm:ring-1 sm:ring-gray-100/10">
+                <div class="flex items-center justify-between">
+                    <a href="{{ url_for('home') }}" class="-m-1.5 p-1.5">
+                        <span class="sr-only">uGym & Power Zone</span>
+                        <div class="flex items-center gap-2">
+                            <div class="h-8 w-8 rounded-lg bg-black flex items-center justify-center">
+                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <!-- Left weight -->
+                                    <rect x="2" y="7" width="4" height="10" rx="1" fill="currentColor"/>
+                                    <!-- Right weight -->
+                                    <rect x="18" y="7" width="4" height="10" rx="1" fill="currentColor"/>
+                                    <!-- Center bar -->
+                                    <rect x="6" y="11" width="12" height="2" fill="currentColor"/>
+                                </svg>
+                            </div>
+                            <span class="bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent font-semibold text-lg">uGym & Power Zone</span>
+                        </div>
+                    </a>
+                    <label for="mobile-menu-toggle" class="-m-2.5 rounded-md p-2.5 cursor-pointer">
+                        <span class="sr-only">Close menu</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="url(#header-gradient-close)" stroke-width="1.5" aria-hidden="true" class="w-6 h-6">
+                            <defs>
+                                <linearGradient id="header-gradient-close" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#0284c7;stop-opacity:1" />
+                                    <stop offset="50%" style="stop-color:#0ea5e9;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#16a34a;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M6 18 18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </label>
+                </div>
+                <div class="mt-6 flow-root">
+                    <div class="-my-6 divide-y divide-white/10">
+                        <div class="space-y-2 py-6">
+                            <a href="{{ url_for('home') }}" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent no-underline hover:no-underline hover:bg-white/5 {% if request.endpoint == 'home' %}bg-white/5{% endif %}">Home</a>
+                            <a href="{{ url_for('access') }}" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent no-underline hover:no-underline hover:bg-white/5 {% if request.endpoint in ['access','membership_details'] %}bg-white/5{% endif %}">Access Membership</a>
+                        </div>
+                        <div class="py-6">
+                            <a href="{{ url_for('signup') }}" class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent no-underline hover:no-underline hover:bg-white/5 {% if request.endpoint in ['signup','preferences','recommendation','confirm','pay'] %}bg-white/5{% endif %}">Sign Up</a>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+        </div>
     </div>
 </header>
 
-<main class="site-main">
+<!-- Student Savings Banner (only on home page) -->
+{% if request.endpoint == 'home' %}
+<input type="checkbox" id="banner-toggle" class="sr-only banner-checkbox">
+<div class="banner-container sticky top-0 z-40 w-full pt-2 pb-1">
+    <div id="student-banner" class="max-w-5xl mx-auto px-4">
+        <div class="bg-slate-700/90 backdrop-blur-sm rounded-full px-4 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-3 sm:gap-4 shadow-lg border border-slate-600/50">
+        <p class="text-white text-xs sm:text-sm md:text-base flex items-center gap-2 flex-1 text-center sm:text-left">
+            <span>If you're a student, you can save up to 30% more on your membership!</span>
+            <a href="{{ url_for('signup') }}" class="text-white hidden sm:inline hover:text-sky-400 transition-colors cursor-pointer" aria-label="Go to signup page">→</a>
+        </p>
+        <label for="banner-toggle" class="cursor-pointer flex-shrink-0 p-1 hover:bg-slate-600/50 rounded-full transition-colors">
+            <span class="sr-only">Close banner</span>
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </label>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<main class="site-main pt-2">
     <div class="container">
         {# Step indicator for the signup → payment flow (no JS) #}
         {% set step = 0 %}

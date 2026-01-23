@@ -274,23 +274,4 @@
         </div>
     </div>
 </div>
-<script>
-    (function () {
-        const wantsGymRadios = document.querySelectorAll('input[name="wants_gym"]');
-        const gymBandSelect = document.getElementById('gym_band');
-        if (!wantsGymRadios.length || !gymBandSelect) return;
-
-        function updateGymBandRequired() {
-            const wantsGym = document.querySelector('input[name="wants_gym"]:checked');
-            const isYes = wantsGym && wantsGym.value === 'yes';
-            gymBandSelect.required = isYes;
-        }
-
-        wantsGymRadios.forEach(function (radio) {
-            radio.addEventListener('change', updateGymBandRequired);
-        });
-
-        updateGymBandRequired();
-    })();
-</script>
 {% endblock %}

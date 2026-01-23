@@ -403,5 +403,6 @@ def not_found(error):
 
 if __name__ == "__main__":
     # Debug mode is convenient during development; disable in production.
-    app.run(debug=True)
+    # Use port 5001 to avoid conflict with AirPlay on macOS
+    app.run(debug=True, port=5001)
 
