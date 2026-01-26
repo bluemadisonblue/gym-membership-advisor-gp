@@ -110,6 +110,17 @@ input[type="checkbox"]:focus {
     }
 }
 
+/* Keyboard focus visible (accessibility) – sky-600 ring */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+    outline: 2px solid #0284c7;
+    outline-offset: 2px;
+}
+
 /* ========================================
    ANIMATIONS & KEYFRAMES
    ======================================== */
@@ -902,6 +913,28 @@ h3 {
 
 .flash-container {
     margin-bottom: 1rem;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.flash-container.flash-dismissed {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-0.5rem);
+}
+
+/* Submit-button loading spinner (used by app.js) */
+@keyframes btn-spin {
+    to { transform: rotate(360deg); }
+}
+.btn-loading-spinner {
+    display: inline-block;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 9999px;
+    animation: btn-spin 0.6s linear infinite;
+    vertical-align: middle;
 }
 
 .flash {
@@ -1192,11 +1225,11 @@ input[type="checkbox"].sr-only {
 }
 
 .stepper-item.is-active .stepper-dot {
-    background: #0b6cff;
+    background: #0284c7; /* sky-600, matches brand */
 }
 
 .stepper-item.is-active .stepper-label {
-    color: #111827;
+    color: #0c4a6e; /* sky-900 */
     font-weight: 600;
 }
 
@@ -1633,8 +1666,11 @@ select:focus {
 }
 
 /* Stepper premium animation */
-.stepper-item.is-active .stepper-dot {
-    animation: pulse 2s ease-in-out infinite;
+/* pulse lives in @media (min-width) block; active dot uses brand sky */
+@media (min-width: 1024px) {
+    .stepper-item.is-active .stepper-dot {
+        animation: pulse 2s ease-in-out infinite;
+    }
 }
 
 /* Flash message premium entrance */
