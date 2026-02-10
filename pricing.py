@@ -121,13 +121,33 @@ def calculate_pricing_for_selection(signup: Dict[str, Any], preferences: Dict[st
         gym_plan_label = None
         if wants_gym:
             if not gym_band:
-                # Defensive: should be validated earlier
-                raise ValueError("Gym band is required when user wants a gym membership.")
-            plan_cfg = gym_cfg["gym_plans"].get(gym_band)
-            if not plan_cfg:
-                raise ValueError(f"Invalid gym band '{gym_band}' for gym '{gym_key}'.")
-            base_gym_price = plan_cfg["price"]
-            gym_plan_label = plan_cfg["label"]
+                # Defensive: should be validated earlier; if missing, treat as no gym plan
+                wants_gym = False
+            else:
+                plan_cfg = gym_cfg["gym_plans"].get(gym_band)
+
+                # If the requested band does not exist for this gym (e.g. DB drift),
+                # fall back gracefully instead of throwing a 500 error.
+                if not plan_cfg:
+                    # Prefer an "anytime" plan if present, otherwise the first available plan.
+                    fallback_cfg = None
+                    fallback_key = None
+                    if "anytime" in gym_cfg["gym_plans"]:
+                        fallback_key = "anytime"
+                        fallback_cfg = gym_cfg["gym_plans"]["anytime"]
+                    elif gym_cfg["gym_plans"]:
+                        fallback_key, fallback_cfg = next(iter(gym_cfg["gym_plans"].items()))
+
+                    if fallback_cfg:
+                        plan_cfg = fallback_cfg
+                        gym_band = fallback_key
+                    else:
+                        # No plans at all for this gym – treat as no gym access.
+                        wants_gym = False
+
+                if wants_gym and plan_cfg:
+                    base_gym_price = plan_cfg["price"]
+                    gym_plan_label = plan_cfg["label"]
 
         addons = []
 
