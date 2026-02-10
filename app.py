@@ -1,5 +1,6 @@
+from datetime import date, datetime
 from decimal import Decimal
-from datetime import datetime, date
+from typing import Dict, Any, Optional, Tuple
 import itertools
 import os
 from functools import wraps
@@ -20,7 +21,13 @@ from pricing import calculate_pricing_for_selection, format_currency
 from email_utils import init_mail, generate_timed_token, verify_timed_token, send_verification_email
 
 
-app = Flask(__name__)
+# Get the directory where this script is located
+basedir = os.path.abspath(os.path.dirname(__file__))
+app = Flask(
+    __name__,
+    template_folder=os.path.join(basedir, 'templates'),
+    static_folder=os.path.join(basedir, 'static')
+)
 # Use environment variable for production, fallback to dev key for local development
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-me")
 
@@ -54,7 +61,11 @@ def generate_membership_id(gym_key: str) -> str:
     """
     Generate a human-friendly membership ID.
 
-    Example: UG-2026-000123 or PZ-2026-000124
+    Args:
+        gym_key: The gym key identifier ("ugym" or "power_zone")
+
+    Returns:
+        A formatted membership ID string (e.g., "UG-2026-000123" or "PZ-2026-000124")
     """
     year = datetime.now().year
     prefix = "UG" if gym_key == "ugym" else "PZ"
@@ -89,11 +100,11 @@ def home():
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
-    
+    """Handle user signup form submission and display."""
     # Calculate max date (today - 16 years) for the date picker
     today = date.today()
     max_date = date(today.year - 16, today.month, today.day)
-    
+
     if request.method == "POST":
         full_name = (request.form.get("full_name") or "").strip()
         email = (request.form.get("email") or "").strip().lower()
@@ -106,7 +117,7 @@ def signup():
 
         if not full_name:
             errors.append("Full name is required.")
-        
+
         if not email:
             errors.append("Email address is required.")
         elif "@" not in email or "." not in email.split("@")[-1]:
@@ -116,12 +127,12 @@ def signup():
             existing_member = Member.query.filter_by(email=email).first()
             if existing_member:
                 errors.append("An account with this email already exists. Please log in instead.")
-        
+
         if not password:
             errors.append("Password is required.")
         elif len(password) < 8:
             errors.append("Password must be at least 8 characters long.")
-        
+
         if password != confirm_password:
             errors.append("Passwords do not match.")
 
@@ -138,7 +149,7 @@ def signup():
                 # Adjust if birthday hasn't occurred yet this year
                 if (today.month, today.day) < (date_of_birth.month, date_of_birth.day):
                     age -= 1
-                    
+
                 if age < 0:
                     errors.append("Invalid date of birth.")
             except ValueError:
@@ -178,19 +189,20 @@ def signup():
         flash("Signup details saved. Please select your membership preferences.", "success")
         return redirect(url_for("preferences"))
 
-    # GET
-    return render_template("signup.html", max_date=max_date.isoformat())
+    # GET: Load saved values if returning to this page
     saved = session.get("signup", {})
     return render_template(
         "signup.html",
+        max_date=max_date.isoformat(),
         full_name=saved.get("full_name", ""),
-        age=saved.get("age") if saved.get("age") is not None else "",
+        date_of_birth=saved.get("date_of_birth", ""),
         is_student=saved.get("is_student", False),
     )
 
 
 @app.route("/preferences", methods=["GET", "POST"])
 def preferences():
+    """Handle membership preferences form submission and display."""
     signup_data = session.get("signup")
     if not signup_data:
         flash("Please start by completing the signup form.", "error")
@@ -252,6 +264,7 @@ def preferences():
 
 @app.route("/recommendation", methods=["GET", "POST"])
 def recommendation():
+    """Display gym recommendations and handle gym selection."""
     signup_data = session.get("signup")
     preferences = session.get("preferences")
     if not signup_data or not preferences:
@@ -290,6 +303,7 @@ def recommendation():
 
 @app.route("/confirm", methods=["GET", "POST"])
 def confirm():
+    """Display confirmation page before payment."""
     signup_data = session.get("signup")
     preferences = session.get("preferences")
     if not signup_data or not preferences:
@@ -322,6 +336,7 @@ def confirm():
 
 @app.route("/pay", methods=["GET", "POST"])
 def pay():
+    """Handle payment processing and membership creation."""
     signup_data = session.get("signup")
     preferences = session.get("preferences")
     chosen_gym = session.get("chosen_gym")
@@ -404,7 +419,8 @@ def pay():
 
 
 @app.route("/success/<membership_id>")
-def success(membership_id):
+def success(membership_id: str):
+    """Display success page after membership creation."""
     member = Member.query.filter_by(membership_id=membership_id).first()
     if not member:
         flash("Membership not found. Please check your ID or create a new membership.", "error")
@@ -462,6 +478,7 @@ def logout():
 
 @app.route("/access", methods=["GET", "POST"])
 def access():
+    """Handle membership access form."""
     if request.method == "POST":
         membership_id = (request.form.get("membership_id") or "").strip()
         if not membership_id:
@@ -479,7 +496,8 @@ def access():
 
 
 @app.route("/membership/<membership_id>")
-def membership_details(membership_id):
+def membership_details(membership_id: str):
+    """Display membership details."""
     member = Member.query.filter_by(membership_id=membership_id).first()
     if not member:
         flash("Membership not found. Please check your ID or create a new membership.", "error")
@@ -778,5 +796,6 @@ def inject_admin_context():
 
 if __name__ == "__main__":
     # Debug mode is convenient during development; disable in production.
-    app.run(debug=True)
+    # Use port 5001 to avoid conflict with AirPlay on macOS
+    app.run(debug=True, port=5001)
 

@@ -3,6 +3,13 @@
 {% block title %}Compare Plans{% endblock %}
 
 {% block content %}
+<style>
+    /* Button text follows radio checked state so "Selected" / "Select this plan" update on click */
+    .plan-option .plan-btn-selected { display: none; }
+    .plan-option .plan-btn-unselected { display: block; }
+    .plan-option:has(input:checked) .plan-btn-selected { display: flex !important; }
+    .plan-option:has(input:checked) .plan-btn-unselected { display: none !important; }
+</style>
 <!-- Header Section -->
 <div class="text-center mb-8 sm:mb-12 animate-fade-in">
     <div class="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-1.5 text-xs font-semibold text-emerald-800 mb-4">
@@ -52,8 +59,8 @@
                     </div>
                 {% endif %}
 
-                <!-- Pricing Card -->
-                <label class="block cursor-pointer">
+                <!-- Pricing Card: plan-option + :has() drive button text by checked state -->
+                <label class="plan-option block cursor-pointer">
                     <input type="radio" name="chosen_gym" value="{{ gym_key }}" 
                            {% if gym_key == chosen_gym %}checked{% endif %}
                            class="sr-only peer">
@@ -140,9 +147,9 @@
                                 {% endif %}
                             </div>
 
-                            <!-- Select Button -->
+                            <!-- Select Button (text switches via CSS :has() when radio is checked) -->
                             <div class="pt-4">
-                                <div class="w-full rounded-lg py-3 px-4 text-center font-semibold transition-all
+                                <div class="plan-btn w-full rounded-lg py-3 px-4 text-center font-semibold transition-all
                                             {% if is_recommended %}
                                                 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg hover:shadow-xl
                                                 peer-checked:from-emerald-700 peer-checked:to-emerald-600
@@ -150,16 +157,13 @@
                                                 bg-slate-100 text-slate-700 hover:bg-slate-200
                                                 peer-checked:bg-sky-600 peer-checked:text-white peer-checked:shadow-lg
                                             {% endif %}">
-                                    {% if gym_key == chosen_gym %}
-                                        <span class="flex items-center justify-center gap-2">
-                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                                            </svg>
-                                            Selected
-                                        </span>
-                                    {% else %}
-                                        Select this plan
-                                    {% endif %}
+                                    <span class="plan-btn-selected hidden items-center justify-center gap-2">
+                                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                        </svg>
+                                        Selected
+                                    </span>
+                                    <span class="plan-btn-unselected">Select this plan</span>
                                 </div>
                             </div>
                         </div>
@@ -188,35 +192,4 @@
     </div>
 </form>
 
-<script>
-// Update button text when radio buttons change
-document.addEventListener('DOMContentLoaded', function() {
-    const radioButtons = document.querySelectorAll('input[name="chosen_gym"]');
-    
-    radioButtons.forEach(radio => {
-        radio.addEventListener('change', function() {
-            // Update all buttons
-            radioButtons.forEach(r => {
-                const button = r.closest('label').querySelector('div[class*="rounded-lg"]');
-                const gymKey = r.value;
-                
-                if (r.checked) {
-                    // Selected state
-                    button.innerHTML = `
-                        <span class="flex items-center justify-center gap-2">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                            </svg>
-                            Selected
-                        </span>
-                    `;
-                } else {
-                    // Unselected state
-                    button.textContent = 'Select this plan';
-                }
-            });
-        });
-    });
-});
-</script>
 {% endblock %}
