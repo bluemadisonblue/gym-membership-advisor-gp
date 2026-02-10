@@ -171,9 +171,9 @@ def signup():
                 max_date=max_date.isoformat(),
             )
 
-        # Derive flags
-        is_young_adult = age < 25
-        is_pensioner = age > 66
+        # Derive flags (only if age was successfully calculated)
+        is_young_adult = age is not None and age < 25
+        is_pensioner = age is not None and age > 66
 
         # Store in session for later steps
         session["signup"] = {
