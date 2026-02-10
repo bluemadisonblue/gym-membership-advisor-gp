@@ -51,11 +51,11 @@
                     <tbody>
                         {% for col in table.columns %}
                         <tr class="align-top">
-                            <td class="pr-4 py-1 font-semibold text-slate-900">{{ col.name }}</td>
-                            <td class="pr-4 py-1 text-slate-700">{{ col.type }}</td>
-                            <td class="pr-4 py-1 text-slate-700">{{ 'Yes' if col.nullable else 'No' }}</td>
+                            <td class="pr-4 py-1 font-semibold text-slate-900">{{ col['name'] }}</td>
+                            <td class="pr-4 py-1 text-slate-700">{{ col['type'] }}</td>
+                            <td class="pr-4 py-1 text-slate-700">{{ 'Yes' if col['nullable'] else 'No' }}</td>
                             <td class="pr-4 py-1 text-slate-700">
-                                {% if col.primary_key %}Yes{% else %}No{% endif %}
+                                {% if col.get('primary_key') %}Yes{% else %}No{% endif %}
                             </td>
                         </tr>
                         {% endfor %}

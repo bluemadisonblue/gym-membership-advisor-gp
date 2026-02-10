@@ -895,26 +895,34 @@ def admin_gyms():
 @require_admin
 def admin_database():
     """Database statistics and management."""
-    from sqlalchemy import inspect
+    from sqlalchemy import inspect, text
     
     # Get all table information
     inspector = inspect(db.engine)
     tables = []
     
     for table_name in inspector.get_table_names():
-        # Get row count
-        result = db.session.execute(f"SELECT COUNT(*) FROM {table_name}")
-        count = result.scalar()
-        
+        # Get row count (quote table names for safety)
+        try:
+            result = db.session.execute(
+                text(f'SELECT COUNT(*) AS count FROM "{table_name}"')
+            )
+            count = result.scalar() or 0
+        except Exception:
+            # If anything goes wrong, don't break the whole page
+            count = 0
+
         # Get columns
         columns = inspector.get_columns(table_name)
-        
-        tables.append({
-            'name': table_name,
-            'row_count': count,
-            'column_count': len(columns),
-            'columns': columns
-        })
+
+        tables.append(
+            {
+                "name": table_name,
+                "row_count": count,
+                "column_count": len(columns),
+                "columns": columns,
+            }
+        )
     
     return render_template("admin/database.html", tables=tables)
 
