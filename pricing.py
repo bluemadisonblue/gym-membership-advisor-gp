@@ -154,7 +154,12 @@ def calculate_pricing_for_selection(signup: Dict[str, Any], preferences: Dict[st
         def maybe_add_addon(addon_key: str, selected: bool):
             if not selected:
                 return
-            addon_cfg = gym_cfg["addons"][addon_key]
+
+            # If this gym doesn't define the requested addon (e.g. DB drift),
+            # skip it instead of raising a KeyError.
+            addon_cfg = gym_cfg["addons"].get(addon_key)
+            if not addon_cfg:
+                return
             label = addon_cfg["label"]
             context_key = "with_gym" if wants_gym else "without_gym"
             price = addon_cfg[context_key]
