@@ -14,8 +14,9 @@ from flask import (
     flash,
     session,
 )
+from sqlalchemy import inspect
 
-from models import db, Gym, Member
+from models import db, Gym, Member, MembershipOption, Discount
 import data
 from pricing import calculate_pricing_for_selection, format_currency
 from email_utils import init_mail, generate_timed_token, verify_timed_token, send_verification_email
@@ -48,6 +49,212 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 # Initialize database
 db.init_app(app)
 
+
+def _seed_initial_data_if_empty() -> None:
+    """
+    Ensure core reference data (gyms, membership options, discounts) exists.
+
+    This is primarily for serverless environments (like Vercel) where running a
+    separate migration/seed step is inconvenient. In a traditional deployment
+    you can keep using init_db.py instead.
+    """
+    # If gyms already exist, assume DB is seeded
+    if Gym.query.first():
+        return
+
+    # Seed gyms
+    ugym = Gym(
+        gym_key="ugym",
+        gym_name="uGym",
+        joining_fee=Decimal("10.00"),
+    )
+    power_zone = Gym(
+        gym_key="power_zone",
+        gym_name="Power Zone",
+        joining_fee=Decimal("30.00"),
+    )
+    db.session.add_all([ugym, power_zone])
+    db.session.commit()
+
+    # Membership options for uGym
+    ugym_options = [
+        # Gym plans
+        MembershipOption(
+            gym_key="ugym",
+            option_type="gym_plan",
+            option_key="super_off_peak",
+            label="Super off-peak (10-12 & 2-4)",
+            price=Decimal("16.00"),
+            discount_allowed=True,
+        ),
+        MembershipOption(
+            gym_key="ugym",
+            option_type="gym_plan",
+            option_key="off_peak",
+            label="Off-peak (12-2 & 8-11)",
+            price=Decimal("21.00"),
+            discount_allowed=True,
+        ),
+        MembershipOption(
+            gym_key="ugym",
+            option_type="gym_plan",
+            option_key="anytime",
+            label="Anytime",
+            price=Decimal("30.00"),
+            discount_allowed=True,
+        ),
+        # Add-ons
+        MembershipOption(
+            gym_key="ugym",
+            option_type="addon",
+            option_key="swim",
+            label="Swimming pool",
+            price_with_full_gym_access=Decimal("15.00"),
+            price_for_addons_only=Decimal("25.00"),
+            discount_allowed=True,
+        ),
+        MembershipOption(
+            gym_key="ugym",
+            option_type="addon",
+            option_key="classes",
+            label="Classes",
+            price_with_full_gym_access=Decimal("10.00"),
+            price_for_addons_only=Decimal("20.00"),
+            discount_allowed=True,
+        ),
+        MembershipOption(
+            gym_key="ugym",
+            option_type="addon",
+            option_key="massage",
+            label="Massage therapy",
+            price_with_full_gym_access=Decimal("25.00"),
+            price_for_addons_only=Decimal("30.00"),
+            discount_allowed=False,
+        ),
+        MembershipOption(
+            gym_key="ugym",
+            option_type="addon",
+            option_key="physio",
+            label="Physiotherapy",
+            price_with_full_gym_access=Decimal("20.00"),
+            price_for_addons_only=Decimal("25.00"),
+            discount_allowed=False,
+        ),
+    ]
+
+    # Membership options for Power Zone
+    power_zone_options = [
+        # Gym plans
+        MembershipOption(
+            gym_key="power_zone",
+            option_type="gym_plan",
+            option_key="super_off_peak",
+            label="Super off-peak",
+            price=Decimal("13.00"),
+            discount_allowed=True,
+        ),
+        MembershipOption(
+            gym_key="power_zone",
+            option_type="gym_plan",
+            option_key="off_peak",
+            label="Off-peak",
+            price=Decimal("19.00"),
+            discount_allowed=True,
+        ),
+        MembershipOption(
+            gym_key="power_zone",
+            option_type="gym_plan",
+            option_key="anytime",
+            label="Anytime",
+            price=Decimal("24.00"),
+            discount_allowed=True,
+        ),
+        # Add-ons
+        MembershipOption(
+            gym_key="power_zone",
+            option_type="addon",
+            option_key="swim",
+            label="Swimming pool",
+            price_with_full_gym_access=Decimal("12.50"),
+            price_for_addons_only=Decimal("20.00"),
+            discount_allowed=True,
+        ),
+        MembershipOption(
+            gym_key="power_zone",
+            option_type="addon",
+            option_key="classes",
+            label="Classes",
+            price_with_full_gym_access=Decimal("0.00"),
+            price_for_addons_only=Decimal("20.00"),
+            discount_allowed=True,
+        ),
+        MembershipOption(
+            gym_key="power_zone",
+            option_type="addon",
+            option_key="massage",
+            label="Massage therapy",
+            price_with_full_gym_access=Decimal("25.00"),
+            price_for_addons_only=Decimal("30.00"),
+            discount_allowed=False,
+        ),
+        MembershipOption(
+            gym_key="power_zone",
+            option_type="addon",
+            option_key="physio",
+            label="Physiotherapy",
+            price_with_full_gym_access=Decimal("25.00"),
+            price_for_addons_only=Decimal("30.00"),
+            discount_allowed=False,
+        ),
+    ]
+
+    db.session.add_all(ugym_options + power_zone_options)
+    db.session.commit()
+
+    # Discounts
+    discounts = [
+        # Student/Young adult discounts
+        Discount(
+            discount_type="student_Discount",
+            gym_key="ugym",
+            rate=Decimal("0.20"),  # 20% off
+        ),
+        Discount(
+            discount_type="student_Discount",
+            gym_key="power_zone",
+            rate=Decimal("0.15"),  # 15% off
+        ),
+        # Pensioner discounts
+        Discount(
+            discount_type="pensioner_Discount",
+            gym_key="ugym",
+            rate=Decimal("0.15"),  # 15% off
+        ),
+        Discount(
+            discount_type="pensioner_Discount",
+            gym_key="power_zone",
+            rate=Decimal("0.20"),  # 20% off
+        ),
+    ]
+
+    db.session.add_all(discounts)
+    db.session.commit()
+
+
+def initialize_database_if_needed() -> None:
+    """
+    Create tables and seed initial data on first request if needed.
+
+    This prevents 'no such table' errors on platforms like Vercel where the
+    SQLite file may not exist until runtime.
+    """
+    inspector = inspect(db.engine)
+    tables = inspector.get_table_names()
+    if "gyms" not in tables or "membership_option" not in tables or "discounts" not in tables:
+        db.create_all()
+    _seed_initial_data_if_empty()
+
+
 # Initialize email
 mail = init_mail(app)
 
@@ -59,6 +266,7 @@ MEMBERSHIP_COUNTER = itertools.count(1)
 @app.before_request
 def load_data():
     """Load gym data from database before handling requests."""
+    initialize_database_if_needed()
     if not data.GYMS:
         data.load_gyms_from_db()
         data.load_discounts_from_db()
