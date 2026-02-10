@@ -1,7 +1,7 @@
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Dict, Any, Optional
 
-from data import GYMS, DISCOUNTS, NON_DISCOUNTED_ADDONS
+import data
 
 
 def money(value: Decimal) -> Decimal:
@@ -35,7 +35,11 @@ def get_discount_rate(gym_key: str, discount_category: Optional[str]) -> Decimal
     if not discount_category:
         return Decimal("0.00")
 
-    gym_rates = DISCOUNTS.get(discount_category, {})
+    # Ensure discounts are loaded from database
+    if not data.DISCOUNTS:
+        data.load_discounts_from_db()
+
+    gym_rates = data.DISCOUNTS.get(discount_category, {})
     return gym_rates.get(gym_key, Decimal("0.00"))
 
 
@@ -75,9 +79,17 @@ def calculate_pricing_for_selection(signup: Dict[str, Any], preferences: Dict[st
 
     discount_category = get_discount_category(age, is_student, is_pensioner_flag)
 
+    # Ensure gyms data is loaded from database
+    if not data.GYMS:
+        data.load_gyms_from_db()
+    
+    # Ensure non-discounted addons are loaded from database
+    if not data.NON_DISCOUNTED_ADDONS:
+        data.load_non_discounted_addons_from_db()
+
     gyms_result: Dict[str, Any] = {}
 
-    for gym_key, gym_cfg in GYMS.items():
+    for gym_key, gym_cfg in data.GYMS.items():
         joining_fee = gym_cfg["joining_fee"]
         discount_rate = get_discount_rate(gym_key, discount_category)
 
@@ -104,7 +116,7 @@ def calculate_pricing_for_selection(signup: Dict[str, Any], preferences: Dict[st
             price = addon_cfg[context_key]
 
             # Massage and physio are never discounted
-            discount_applicable = addon_key not in NON_DISCOUNTED_ADDONS
+            discount_applicable = addon_key not in data.NON_DISCOUNTED_ADDONS
             discount_amount = Decimal("0.00")
             if discount_applicable and discount_rate > 0:
                 discount_amount = money(price * discount_rate)
