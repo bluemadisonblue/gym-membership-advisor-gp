@@ -33,9 +33,17 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-me")
 
 # Database configuration
 # Use SQLite for local development, can be changed to MySQL/PostgreSQL for production
-database_url = os.environ.get("DATABASE_URL", "sqlite:///gym_membership.db")
+# For Vercel, use /tmp directory since filesystem is ephemeral
+if os.environ.get("VERCEL"):
+    database_url = os.environ.get("DATABASE_URL", "sqlite:////tmp/gym_membership.db")
+else:
+    database_url = os.environ.get("DATABASE_URL", "sqlite:///gym_membership.db")
+
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "connect_args": {"check_same_thread": False}  # Allow multi-threading for SQLite
+}
 
 # Initialize database
 db.init_app(app)
