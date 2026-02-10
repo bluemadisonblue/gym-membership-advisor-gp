@@ -643,7 +643,15 @@ def success(membership_id: str):
         return redirect(url_for("access"))
 
     membership = member.to_dict()
-    return render_template("success.html", membership=membership)
+    
+    # Generate verification URL for display on success page
+    # (in case email doesn't arrive, user can still verify)
+    verification_url = None
+    if not member.email_verified:
+        token = generate_timed_token(app, member.email)
+        verification_url = url_for('verify_email', token=token, _external=True)
+    
+    return render_template("success.html", membership=membership, verification_url=verification_url)
 
 
 @app.route("/login", methods=["GET", "POST"])
