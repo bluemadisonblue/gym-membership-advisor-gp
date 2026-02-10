@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Members · Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+        <div>
+            <p class="inline-flex items-center gap-2 rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800 mb-2">
+                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3-9a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Admin · Members
+            </p>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900">Members</h1>
+            <p class="text-slate-600 mt-1 text-sm">Search, filter, and manage all memberships.</p>
+        </div>
+        <div class="flex items-center gap-3 mt-4 sm:mt-0">
+            <a href="{{ url_for('admin_dashboard') }}"
+               class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                Dashboard
+            </a>
+            <a href="{{ url_for('admin_logout') }}"
+               class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-red-100 text-red-700 text-sm font-semibold hover:bg-red-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                Logout
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <form method="get" class="mb-6 rounded-2xl bg-white border border-slate-200 shadow-sm p-4 sm:p-5">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <!-- Search -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1" for="search">
+                    Search (name, email, ID)
+                </label>
+                <input id="search" name="search" type="text"
+                       value="{{ search }}"
+                       class="block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-sky-500 focus:ring-sky-500"
+                       placeholder="e.g. Alice, alice@example.com, UG-...">
+            </div>
+
+            <!-- Gym filter -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1" for="gym">
+                    Gym
+                </label>
+                <select id="gym" name="gym"
+                        class="block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-sky-500 focus:ring-sky-500">
+                    <option value="">All gyms</option>
+                    {% for key, gym in gyms.items() %}
+                    <option value="{{ key }}" {% if gym_filter == key %}selected{% endif %}>
+                        {{ gym.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Verified filter -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1" for="verified">
+                    Email status
+                </label>
+                <select id="verified" name="verified"
+                        class="block w-full rounded-lg border-slate-300 text-sm shadow-sm focus:border-sky-500 focus:ring-sky-500">
+                    <option value="">All</option>
+                    <option value="yes" {% if verified_filter == 'yes' %}selected{% endif %}>Verified</option>
+                    <option value="no" {% if verified_filter == 'no' %}selected{% endif %}>Unverified</option>
+                </select>
+            </div>
+        </div>
+        <div class="mt-4 flex flex-wrap items-center gap-3">
+            <button type="submit"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-sky-600 text-white text-sm font-semibold shadow-sm hover:bg-sky-700">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M15 11a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                Apply filters
+            </button>
+            <a href="{{ url_for('admin_members') }}"
+               class="text-xs text-slate-500 hover:text-slate-700">
+                Clear filters
+            </a>
+        </div>
+    </form>
+
+    <!-- Members table -->
+    <div class="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+            <p class="text-xs font-semibold text-slate-600">
+                Showing {{ members.items|length }} of {{ members.total }} member{{ members.total != 1 and 's' or '' }}
+            </p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-100 text-sm">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Name</th>
+                        <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Email</th>
+                        <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Membership ID</th>
+                        <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Gym</th>
+                        <th class="px-4 py-2 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Status</th>
+                        <th class="px-4 py-2 text-right text-xs font-semibold text-slate-600 uppercase tracking-wide">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% if members.items %}
+                        {% for member in members.items %}
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-4 py-2">
+                                <div class="font-semibold text-slate-900">{{ member.full_name }}</div>
+                                <div class="text-xs text-slate-500">ID: {{ member.id }}</div>
+                            </td>
+                            <td class="px-4 py-2">
+                                <div class="text-slate-800 text-sm">{{ member.email }}</div>
+                            </td>
+                            <td class="px-4 py-2">
+                                <code class="text-xs font-mono text-slate-700 bg-slate-50 px-2 py-1 rounded">
+                                    {{ member.membership_id }}
+                                </code>
+                            </td>
+                            <td class="px-4 py-2">
+                                {% set gym = gyms.get(member.chosen_gym) %}
+                                <div class="text-sm text-slate-800">
+                                    {{ gym.name if gym else member.chosen_gym }}
+                                </div>
+                                {% if member.gym_band %}
+                                    <div class="text-xs text-slate-500">{{ member.gym_band }}</div>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-2">
+                                {% if member.email_verified %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
+                                    Active
+                                </span>
+                                {% else %}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-amber-500 mr-1.5"></span>
+                                    Unverified
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-2 text-right">
+                                <div class="inline-flex items-center gap-2">
+                                    <a href="{{ url_for('admin_member_detail', member_id=member.id) }}"
+                                       class="text-xs font-semibold text-sky-600 hover:text-sky-800">
+                                        Details
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="px-4 py-8 text-center text-sm text-slate-500">
+                                No members found matching your filters.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if members.pages > 1 %}
+        <div class="px-4 py-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600">
+            <div>
+                Page {{ members.page }} of {{ members.pages }}
+            </div>
+            <div class="flex items-center gap-2">
+                {% if members.has_prev %}
+                <a href="{{ url_for('admin_members', page=members.prev_num, search=search, gym=gym_filter, verified=verified_filter) }}"
+                   class="px-2 py-1 rounded border border-slate-300 bg-white hover:bg-slate-50">
+                    Previous
+                </a>
+                {% endif %}
+                {% if members.has_next %}
+                <a href="{{ url_for('admin_members', page=members.next_num, search=search, gym=gym_filter, verified=verified_filter) }}"
+                   class="px-2 py-1 rounded border border-slate-300 bg-white hover:bg-slate-50">
+                    Next
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
