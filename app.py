@@ -19,7 +19,7 @@ from sqlalchemy import inspect
 from models import db, Gym, Member, MembershipOption, Discount
 import data
 from pricing import calculate_pricing_for_selection, format_currency
-from email_utils import init_mail, generate_timed_token, verify_timed_token, send_verification_email
+from email_utils import init_mail
 
 
 # Get the directory where this script is located
@@ -571,24 +571,18 @@ def pay():
     if request.method == "POST":
         # Simulate payment success and create membership in database
         membership_id = generate_membership_id(chosen_gym)
-        
+
         # Calculate date_of_birth from age (approximation)
         today = date.today()
         age = signup_data['age']
         date_of_birth = date(today.year - age, today.month, today.day)
-        
-        # Generate verification token
-        token = generate_timed_token(app, signup_data['email'])
-        
+
         # Create new member in database
         new_member = Member(
             membership_id=membership_id,
             full_name=signup_data['full_name'],
             email=signup_data['email'],
-            password_hash='',  # Temporary, will be set below
-            email_verified=False,
-            verification_token=token,
-            verification_sent_at=datetime.utcnow(),
+            email_verified=True,
             date_of_birth=date_of_birth,
             age=signup_data['age'],
             is_student=signup_data['is_student'],
@@ -605,18 +599,14 @@ def pay():
             joining_fee=chosen_pricing['joining_fee'],
             first_payment_total=chosen_pricing['joining_fee'] + chosen_pricing['monthly_total_after_discount']
         )
-        
+
         # Hash and set password
         new_member.set_password(signup_data['password'])
-        
+
         db.session.add(new_member)
         db.session.commit()
-        
-        # Send verification email
-        verification_url = url_for('verify_email', token=token, _external=True)
-        send_verification_email(app, new_member, verification_url)
 
-        flash("Payment successful and membership created! Please check your email to verify your account.", "success")
+        flash("Payment successful and membership created!", "success")
         # Clear sensitive data from session but keep membership ID in flash/redirect
         session.pop("signup", None)
         session.pop("preferences", None)
@@ -643,15 +633,7 @@ def success(membership_id: str):
         return redirect(url_for("access"))
 
     membership = member.to_dict()
-    
-    # Generate verification URL for display on success page
-    # (in case email doesn't arrive, user can still verify)
-    verification_url = None
-    if not member.email_verified:
-        token = generate_timed_token(app, member.email)
-        verification_url = url_for('verify_email', token=token, _external=True)
-    
-    return render_template("success.html", membership=membership, verification_url=verification_url)
+    return render_template("success.html", membership=membership)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -729,75 +711,6 @@ def membership_details(membership_id: str):
 
     membership = member.to_dict()
     return render_template("membership_details.html", membership=membership)
-
-
-@app.route("/verify-email/<token>")
-def verify_email(token):
-    """Verify email address using the token."""
-    email = verify_timed_token(app, token, max_age=3600)  # 1 hour expiry
-    
-    if not email:
-        flash("Invalid or expired verification link. Please request a new one.", "error")
-        return redirect(url_for("resend_verification"))
-    
-    # Find member by email
-    member = Member.query.filter_by(email=email).first()
-    
-    if not member:
-        flash("Member not found. Please sign up again.", "error")
-        return redirect(url_for("signup"))
-    
-    if member.email_verified:
-        flash("Your email is already verified!", "success")
-        return redirect(url_for("access"))
-    
-    # Mark email as verified
-    member.email_verified = True
-    member.verification_token = None
-    db.session.commit()
-    
-    flash("Email verified successfully! You can now proceed with your membership.", "success")
-    
-    # Render verification success page
-    return render_template("email_verified.html", member=member)
-
-
-@app.route("/resend-verification", methods=["GET", "POST"])
-def resend_verification():
-    """Resend verification email."""
-    if request.method == "POST":
-        email = (request.form.get("email") or "").strip().lower()
-        
-        if not email:
-            flash("Please enter your email address.", "error")
-            return render_template("resend_verification.html")
-        
-        member = Member.query.filter_by(email=email).first()
-        
-        if not member:
-            # Don't reveal if email exists or not for security
-            flash("If an account exists with this email, a verification link has been sent.", "info")
-            return render_template("resend_verification.html")
-        
-        if member.email_verified:
-            flash("Your email is already verified! You can access your membership.", "success")
-            return redirect(url_for("access"))
-        
-        # Generate new token and send email
-        token = generate_timed_token(app, member.email)
-        verification_url = url_for('verify_email', token=token, _external=True)
-        
-        from email_utils import send_resend_verification_email
-        if send_resend_verification_email(app, member, verification_url):
-            member.verification_sent_at = datetime.utcnow()
-            db.session.commit()
-            flash("Verification email sent! Please check your inbox.", "success")
-        else:
-            flash("Failed to send verification email. Please try again later.", "error")
-        
-        return render_template("resend_verification.html")
-    
-    return render_template("resend_verification.html")
 
 
 @app.errorhandler(404)
