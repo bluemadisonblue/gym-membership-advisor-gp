@@ -28,7 +28,7 @@ wheels/
 instance/
 .webassets-cache
 
-# Database
+# Database (local SQLite stored in instance/)
 *.db
 *.sqlite
 *.sqlite3

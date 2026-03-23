@@ -17,12 +17,13 @@ NON_DISCOUNTED_ADDONS = {"massage", "physio"}
 def load_gyms_from_db():
     """
     Load gym data from the database and populate GYMS dictionary.
-    This function should be called after the app context is available.
+    Eager-loads membership_options to avoid N+1 queries.
     """
+    from sqlalchemy.orm import joinedload
     from models import Gym
 
     global GYMS
-    gyms = Gym.query.all()
+    gyms = Gym.query.options(joinedload(Gym.membership_options)).all()
 
     GYMS = {}
     for gym in gyms:
@@ -73,6 +74,14 @@ def load_non_discounted_addons_from_db():
     NON_DISCOUNTED_ADDONS = {option.option_key for option in non_discounted}
 
     return NON_DISCOUNTED_ADDONS
+
+
+def invalidate_cache() -> None:
+    """Clear cached data. Call when admin updates gyms, options, or discounts."""
+    global GYMS, DISCOUNTS, NON_DISCOUNTED_ADDONS
+    GYMS = {}
+    DISCOUNTS = {}
+    NON_DISCOUNTED_ADDONS = {"massage", "physio"}
 
 
 def get_gym(gym_key: str) -> Optional[Dict[str, Any]]:

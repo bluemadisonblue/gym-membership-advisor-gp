@@ -1,7 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Dict, Any, Optional, Tuple
-import itertools
 import os
 from functools import wraps
 
@@ -14,14 +13,12 @@ from flask import (
     flash,
     session,
 )
-from sqlalchemy import inspect
+from sqlalchemy import inspect, func, case
 
 from models import db, Gym, Member, MembershipOption, Discount
 import data
 from pricing import calculate_pricing_for_selection, format_currency
-from email_utils import init_mail
-
-
+from db_seed import seed_all_if_empty
 # Get the directory where this script is located
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(
@@ -32,14 +29,10 @@ app = Flask(
 # Use environment variable for production, fallback to dev key for local development
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key-change-me")
 
-# Database configuration
-# Use SQLite for local development, can be changed to MySQL/PostgreSQL for production
-# For Vercel, use /tmp directory since filesystem is ephemeral
-if os.environ.get("VERCEL"):
-    database_url = os.environ.get("DATABASE_URL", "sqlite:////tmp/gym_membership.db")
-else:
-    database_url = os.environ.get("DATABASE_URL", "sqlite:///gym_membership.db")
-
+# Database configuration - local SQLite only (stored in instance folder)
+os.makedirs(os.path.join(basedir, "instance"), exist_ok=True)
+db_path = os.path.join(basedir, "instance", "gym_membership.db")
+database_url = os.environ.get("DATABASE_URL", f"sqlite:///{db_path}")
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
@@ -49,224 +42,28 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 # Initialize database
 db.init_app(app)
 
+_db_initialized = False
 
-def _seed_initial_data_if_empty() -> None:
-    """
-    Ensure core reference data (gyms, membership options, discounts) exists.
 
-    This is primarily for serverless environments (like Vercel) where running a
-    separate migration/seed step is inconvenient. In a traditional deployment
-    you can keep using init_db.py instead.
-    """
-    # If gyms already exist, assume DB is seeded
-    if Gym.query.first():
+def _ensure_db_ready() -> None:
+    """Create tables and seed data once on first request."""
+    global _db_initialized
+    if _db_initialized:
         return
-
-    # Seed gyms
-    ugym = Gym(
-        gym_key="ugym",
-        gym_name="uGym",
-        joining_fee=Decimal("10.00"),
-    )
-    power_zone = Gym(
-        gym_key="power_zone",
-        gym_name="Power Zone",
-        joining_fee=Decimal("30.00"),
-    )
-    db.session.add_all([ugym, power_zone])
-    db.session.commit()
-
-    # Membership options for uGym
-    ugym_options = [
-        # Gym plans
-        MembershipOption(
-            gym_key="ugym",
-            option_type="gym_plan",
-            option_key="super_off_peak",
-            label="Super off-peak (10-12 & 2-4)",
-            price=Decimal("16.00"),
-            discount_allowed=True,
-        ),
-        MembershipOption(
-            gym_key="ugym",
-            option_type="gym_plan",
-            option_key="off_peak",
-            label="Off-peak (12-2 & 8-11)",
-            price=Decimal("21.00"),
-            discount_allowed=True,
-        ),
-        MembershipOption(
-            gym_key="ugym",
-            option_type="gym_plan",
-            option_key="anytime",
-            label="Anytime",
-            price=Decimal("30.00"),
-            discount_allowed=True,
-        ),
-        # Add-ons
-        MembershipOption(
-            gym_key="ugym",
-            option_type="addon",
-            option_key="swim",
-            label="Swimming pool",
-            price_with_full_gym_access=Decimal("15.00"),
-            price_for_addons_only=Decimal("25.00"),
-            discount_allowed=True,
-        ),
-        MembershipOption(
-            gym_key="ugym",
-            option_type="addon",
-            option_key="classes",
-            label="Classes",
-            price_with_full_gym_access=Decimal("10.00"),
-            price_for_addons_only=Decimal("20.00"),
-            discount_allowed=True,
-        ),
-        MembershipOption(
-            gym_key="ugym",
-            option_type="addon",
-            option_key="massage",
-            label="Massage therapy",
-            price_with_full_gym_access=Decimal("25.00"),
-            price_for_addons_only=Decimal("30.00"),
-            discount_allowed=False,
-        ),
-        MembershipOption(
-            gym_key="ugym",
-            option_type="addon",
-            option_key="physio",
-            label="Physiotherapy",
-            price_with_full_gym_access=Decimal("20.00"),
-            price_for_addons_only=Decimal("25.00"),
-            discount_allowed=False,
-        ),
-    ]
-
-    # Membership options for Power Zone
-    power_zone_options = [
-        # Gym plans
-        MembershipOption(
-            gym_key="power_zone",
-            option_type="gym_plan",
-            option_key="super_off_peak",
-            label="Super off-peak",
-            price=Decimal("13.00"),
-            discount_allowed=True,
-        ),
-        MembershipOption(
-            gym_key="power_zone",
-            option_type="gym_plan",
-            option_key="off_peak",
-            label="Off-peak",
-            price=Decimal("19.00"),
-            discount_allowed=True,
-        ),
-        MembershipOption(
-            gym_key="power_zone",
-            option_type="gym_plan",
-            option_key="anytime",
-            label="Anytime",
-            price=Decimal("24.00"),
-            discount_allowed=True,
-        ),
-        # Add-ons
-        MembershipOption(
-            gym_key="power_zone",
-            option_type="addon",
-            option_key="swim",
-            label="Swimming pool",
-            price_with_full_gym_access=Decimal("12.50"),
-            price_for_addons_only=Decimal("20.00"),
-            discount_allowed=True,
-        ),
-        MembershipOption(
-            gym_key="power_zone",
-            option_type="addon",
-            option_key="classes",
-            label="Classes",
-            price_with_full_gym_access=Decimal("0.00"),
-            price_for_addons_only=Decimal("20.00"),
-            discount_allowed=True,
-        ),
-        MembershipOption(
-            gym_key="power_zone",
-            option_type="addon",
-            option_key="massage",
-            label="Massage therapy",
-            price_with_full_gym_access=Decimal("25.00"),
-            price_for_addons_only=Decimal("30.00"),
-            discount_allowed=False,
-        ),
-        MembershipOption(
-            gym_key="power_zone",
-            option_type="addon",
-            option_key="physio",
-            label="Physiotherapy",
-            price_with_full_gym_access=Decimal("25.00"),
-            price_for_addons_only=Decimal("30.00"),
-            discount_allowed=False,
-        ),
-    ]
-
-    db.session.add_all(ugym_options + power_zone_options)
-    db.session.commit()
-
-    # Discounts
-    discounts = [
-        # Student/Young adult discounts
-        Discount(
-            discount_type="student_Discount",
-            gym_key="ugym",
-            rate=Decimal("0.20"),  # 20% off
-        ),
-        Discount(
-            discount_type="student_Discount",
-            gym_key="power_zone",
-            rate=Decimal("0.15"),  # 15% off
-        ),
-        # Pensioner discounts
-        Discount(
-            discount_type="pensioner_Discount",
-            gym_key="ugym",
-            rate=Decimal("0.15"),  # 15% off
-        ),
-        Discount(
-            discount_type="pensioner_Discount",
-            gym_key="power_zone",
-            rate=Decimal("0.20"),  # 20% off
-        ),
-    ]
-
-    db.session.add_all(discounts)
-    db.session.commit()
-
-
-def initialize_database_if_needed() -> None:
-    """
-    Create tables and seed initial data on first request if needed.
-
-    This prevents 'no such table' errors on platforms like Vercel where the
-    SQLite file may not exist until runtime.
-    """
     inspector = inspect(db.engine)
     tables = inspector.get_table_names()
     if "gyms" not in tables or "membership_option" not in tables or "discounts" not in tables:
         db.create_all()
-    _seed_initial_data_if_empty()
+    seed_all_if_empty()
+    _db_initialized = True
 
 
-# Initialize email
-mail = init_mail(app)
-
-# Membership counter for generating unique IDs
-MEMBERSHIP_COUNTER = itertools.count(1)
-
-
-# Load gym data from database on application startup
 @app.before_request
 def load_data():
-    """Load gym data from database before handling requests."""
-    initialize_database_if_needed()
+    """Load gym data when needed. Skip for static assets."""
+    if request.endpoint == "static":
+        return
+    _ensure_db_ready()
     if not data.GYMS:
         data.load_gyms_from_db()
         data.load_discounts_from_db()
@@ -274,18 +71,10 @@ def load_data():
 
 
 def generate_membership_id(gym_key: str) -> str:
-    """
-    Generate a human-friendly membership ID.
-
-    Args:
-        gym_key: The gym key identifier ("ugym" or "power_zone")
-
-    Returns:
-        A formatted membership ID string (e.g., "UG-2026-000123" or "PZ-2026-000124")
-    """
+    """Generate a unique membership ID from DB count (safe across restarts)."""
     year = datetime.now().year
     prefix = "UG" if gym_key == "ugym" else "PZ"
-    seq = next(MEMBERSHIP_COUNTER)
+    seq = Member.query.count() + 1
     return f"{prefix}-{year}-{seq:06d}"
 
 
@@ -298,6 +87,24 @@ def login_required(f):
             return redirect(url_for("login"))
         return f(*args, **kwargs)
     return decorated_function
+
+
+def _get_signup_flow():
+    """Return (signup_data, preferences) or (None, None) if incomplete. Redirects on failure."""
+    signup_data = session.get("signup")
+    preferences = session.get("preferences")
+    if not signup_data or not preferences:
+        flash("Please complete the signup and preferences steps first.", "error")
+        return None, None
+    return signup_data, preferences
+
+
+def _get_member_for_user(membership_id: str):
+    """Return member if found and owned by current user, else None."""
+    member = Member.query.filter_by(membership_id=membership_id).first()
+    if not member or member.id != session.get("user_id"):
+        return None
+    return member
 
 
 @app.context_processor
@@ -481,13 +288,12 @@ def preferences():
 @app.route("/recommendation", methods=["GET", "POST"])
 def recommendation():
     """Display gym recommendations and handle gym selection."""
-    signup_data = session.get("signup")
-    preferences = session.get("preferences")
-    if not signup_data or not preferences:
-        flash("Please complete the signup and preferences steps first.", "error")
+    signup_data, preferences = _get_signup_flow()
+    if signup_data is None:
         return redirect(url_for("signup"))
 
     pricing_result = calculate_pricing_for_selection(signup_data, preferences)
+    session["pricing_result"] = pricing_result
     recommended_gym_key = pricing_result["recommended_gym"]
 
     if request.method == "POST":
@@ -520,13 +326,11 @@ def recommendation():
 @app.route("/confirm", methods=["GET", "POST"])
 def confirm():
     """Display confirmation page before payment."""
-    signup_data = session.get("signup")
-    preferences = session.get("preferences")
-    if not signup_data or not preferences:
-        flash("Please complete the signup and preferences steps first.", "error")
+    signup_data, preferences = _get_signup_flow()
+    if signup_data is None:
         return redirect(url_for("signup"))
 
-    pricing_result = calculate_pricing_for_selection(signup_data, preferences)
+    pricing_result = session.get("pricing_result") or calculate_pricing_for_selection(signup_data, preferences)
     recommended_gym_key = pricing_result["recommended_gym"]
     chosen_gym = session.get("chosen_gym", recommended_gym_key)
 
@@ -553,15 +357,14 @@ def confirm():
 @app.route("/pay", methods=["GET", "POST"])
 def pay():
     """Handle payment processing and membership creation."""
-    signup_data = session.get("signup")
-    preferences = session.get("preferences")
+    signup_data, preferences = _get_signup_flow()
     chosen_gym = session.get("chosen_gym")
 
-    if not signup_data or not preferences or not chosen_gym:
+    if signup_data is None or not chosen_gym:
         flash("Your session has expired or is incomplete. Please start again.", "error")
         return redirect(url_for("signup"))
 
-    pricing_result = calculate_pricing_for_selection(signup_data, preferences)
+    pricing_result = session.get("pricing_result") or calculate_pricing_for_selection(signup_data, preferences)
     if chosen_gym not in pricing_result["gyms"]:
         flash("Invalid gym selection in your session. Please choose again.", "error")
         return redirect(url_for("recommendation"))
@@ -606,11 +409,16 @@ def pay():
         db.session.add(new_member)
         db.session.commit()
 
+        # Log user in automatically so they can access membership without entering ID
+        session["user_id"] = new_member.id
+        session["user_email"] = new_member.email
+        session["user_name"] = new_member.full_name
+
         flash("Payment successful and membership created!", "success")
-        # Clear sensitive data from session but keep membership ID in flash/redirect
         session.pop("signup", None)
         session.pop("preferences", None)
         session.pop("chosen_gym", None)
+        session.pop("pricing_result", None)
 
         return redirect(url_for("success", membership_id=membership_id))
 
@@ -625,12 +433,13 @@ def pay():
 
 
 @app.route("/success/<membership_id>")
+@login_required
 def success(membership_id: str):
     """Display success page after membership creation."""
-    member = Member.query.filter_by(membership_id=membership_id).first()
+    member = _get_member_for_user(membership_id)
     if not member:
-        flash("Membership not found. Please check your ID or create a new membership.", "error")
-        return redirect(url_for("access"))
+        flash("Membership not found or access denied.", "error")
+        return redirect(url_for("home"))
 
     membership = member.to_dict()
     return render_template("success.html", membership=membership)
@@ -684,30 +493,22 @@ def logout():
 
 @app.route("/access", methods=["GET", "POST"])
 def access():
-    """Handle membership access form."""
-    if request.method == "POST":
-        membership_id = (request.form.get("membership_id") or "").strip()
-        if not membership_id:
-            flash("Please enter a membership ID.", "error")
-            return render_template("access.html")
-
-        member = Member.query.filter_by(membership_id=membership_id).first()
-        if not member:
-            flash("No membership found with that ID. Please check and try again.", "error")
-            return render_template("access.html")
-
-        return redirect(url_for("membership_details", membership_id=membership_id))
-
+    """Handle membership access. Logged-in users go straight to their membership."""
+    if "user_id" in session:
+        member = Member.query.get(session["user_id"])
+        if member:
+            return redirect(url_for("membership_details", membership_id=member.membership_id))
     return render_template("access.html")
 
 
 @app.route("/membership/<membership_id>")
+@login_required
 def membership_details(membership_id: str):
-    """Display membership details."""
-    member = Member.query.filter_by(membership_id=membership_id).first()
+    """Display membership details. Only the account owner can view."""
+    member = _get_member_for_user(membership_id)
     if not member:
-        flash("Membership not found. Please check your ID or create a new membership.", "error")
-        return redirect(url_for("access"))
+        flash("Membership not found or access denied.", "error")
+        return redirect(url_for("home"))
 
     membership = member.to_dict()
     return render_template("membership_details.html", membership=membership)
@@ -723,10 +524,9 @@ def not_found(error):
 # ============================================================================
 
 from admin_auth import (
-    require_admin, is_admin_logged_in, verify_password, 
+    require_admin, is_admin_logged_in, verify_password,
     ADMIN_USERNAME, ADMIN_PASSWORD_HASH, log_admin_action, generate_csrf_token, verify_csrf_token
 )
-from sqlalchemy import func
 
 
 @app.route("/admin/login", methods=["GET", "POST"])
@@ -769,11 +569,14 @@ def admin_logout():
 @require_admin
 def admin_dashboard():
     """Admin dashboard with statistics."""
-    # Get statistics
-    total_members = Member.query.count()
-    verified_members = Member.query.filter_by(email_verified=True).count()
+    total_verified = db.session.query(
+        func.count(Member.id).label("total"),
+        func.sum(case((Member.email_verified == True, 1), else_=0)).label("verified"),
+    ).first()
+    total_members = total_verified.total or 0
+    verified_members = int(total_verified.verified or 0)
     unverified_members = total_members - verified_members
-    
+
     # Members by gym
     members_by_gym = db.session.query(
         Member.chosen_gym,
@@ -896,48 +699,58 @@ def admin_gyms():
 def admin_database():
     """Database statistics and management."""
     from sqlalchemy import inspect, text
-    
-    # Get all table information
+
     inspector = inspect(db.engine)
     tables = []
-    
-    for table_name in inspector.get_table_names():
-        # Get row count (quote table names for safety)
+
+    for table_name in sorted(inspector.get_table_names()):
         try:
             result = db.session.execute(
                 text(f'SELECT COUNT(*) AS count FROM "{table_name}"')
             )
             count = result.scalar() or 0
         except Exception:
-            # If anything goes wrong, don't break the whole page
             count = 0
 
-        # Get columns
-        columns = inspector.get_columns(table_name)
+        raw_cols = inspector.get_columns(table_name)
+        pk_cols = set()
+        try:
+            pk = inspector.get_pk_constraint(table_name)
+            if pk and pk.get("constrained_columns"):
+                pk_cols = set(pk["constrained_columns"])
+        except Exception:
+            pass
 
-        tables.append(
-            {
-                "name": table_name,
-                "row_count": count,
-                "column_count": len(columns),
-                "columns": columns,
-            }
-        )
-    
+        columns = []
+        for c in raw_cols:
+            col_type = c.get("type")
+            type_str = str(col_type) if col_type else "—"
+            columns.append({
+                "name": c.get("name", "—"),
+                "type": type_str,
+                "nullable": c.get("nullable", False),
+                "primary_key": c.get("name") in pk_cols,
+            })
+
+        tables.append({
+            "name": table_name,
+            "row_count": count,
+            "column_count": len(columns),
+            "columns": columns,
+        })
+
     return render_template("admin/database.html", tables=tables)
 
 
 @app.context_processor
 def inject_admin_context():
     """Inject admin-related variables into templates."""
+    admin_logged_in = is_admin_logged_in()
     return {
-        'is_admin': is_admin_logged_in(),
-        'csrf_token': generate_csrf_token() if is_admin_logged_in() else None
+        "is_admin": admin_logged_in,
+        "csrf_token": generate_csrf_token() if admin_logged_in else None,
     }
 
-
-# For Vercel serverless deployment
-# The 'app' object is automatically detected by Vercel
 
 if __name__ == "__main__":
     # Debug mode is convenient during development; disable in production.
