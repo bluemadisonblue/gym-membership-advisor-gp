@@ -1,10 +1,52 @@
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 from typing import Dict, Any, Optional
+import re
 
 import data
 
 
-def money(value: Decimal) -> Decimal:
+def _to_decimal(value: Any) -> Decimal:
+    """
+    Convert various runtime value types into a Decimal safely.
+
+    Note: Flask's cookie-based `session` cannot store `Decimal` objects, so
+    pricing values may arrive here as strings after serialization.
+    """
+    if value is None:
+        return Decimal("0.00")
+
+    if isinstance(value, Decimal):
+        return value
+
+    # Avoid treating bool as int (bool is a subclass of int).
+    if isinstance(value, bool):
+        return Decimal("0.00")
+
+    if isinstance(value, int):
+        return Decimal(value)
+
+    if isinstance(value, float):
+        return Decimal(str(value))
+
+    if isinstance(value, str):
+        s = value.strip()
+        s = s.replace("£", "").replace(",", "")
+        match = re.search(r"-?\d+(?:\.\d+)?", s)
+        if not match:
+            return Decimal("0.00")
+        try:
+            return Decimal(match.group(0))
+        except InvalidOperation:
+            return Decimal("0.00")
+
+    # Best-effort fallback.
+    try:
+        return Decimal(str(value))
+    except (InvalidOperation, TypeError, ValueError):
+        return Decimal("0.00")
+
+
+def money(value: Any) -> Decimal:
     """
     Normalize a Decimal monetary value to 2 decimal places.
 
@@ -14,10 +56,10 @@ def money(value: Decimal) -> Decimal:
     Returns:
         The value rounded to 2 decimal places using half-up rounding
     """
-    return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return _to_decimal(value).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
-def format_currency(value: Decimal) -> str:
+def format_currency(value: Any) -> str:
     """
     Format a Decimal as a GBP currency string.
 

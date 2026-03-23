@@ -17,7 +17,7 @@ from sqlalchemy import inspect, func, case
 
 from models import db, Gym, Member, MembershipOption, Discount
 import data
-from pricing import calculate_pricing_for_selection, format_currency
+from pricing import calculate_pricing_for_selection, format_currency, money
 from db_seed import seed_all_if_empty
 # Get the directory where this script is located
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -381,6 +381,10 @@ def pay():
         date_of_birth = date(today.year - age, today.month, today.day)
 
         # Create new member in database
+        monthly_total = money(chosen_pricing.get("monthly_total_after_discount"))
+        joining_fee = money(chosen_pricing.get("joining_fee"))
+        first_payment_total = money(joining_fee + monthly_total)
+
         new_member = Member(
             membership_id=membership_id,
             full_name=signup_data['full_name'],
@@ -398,9 +402,9 @@ def pay():
             add_classes=preferences.get('add_classes', False),
             add_massage=preferences.get('add_massage', False),
             add_physio=preferences.get('add_physio', False),
-            monthly_total=chosen_pricing['monthly_total_after_discount'],
-            joining_fee=chosen_pricing['joining_fee'],
-            first_payment_total=chosen_pricing['joining_fee'] + chosen_pricing['monthly_total_after_discount']
+            monthly_total=monthly_total,
+            joining_fee=joining_fee,
+            first_payment_total=first_payment_total
         )
 
         # Hash and set password
