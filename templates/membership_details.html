@@ -11,9 +11,21 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
         </div>
-        <h1 class="text-3xl font-bold text-slate-900 mb-2">Membership Details</h1>
-        <p class="text-slate-600">Your complete membership information</p>
+        <h1 class="text-3xl font-bold text-slate-900 mb-2">{% if membership.has_active_membership %}Membership Details{% else %}Your account{% endif %}</h1>
+        <p class="text-slate-600">{% if membership.has_active_membership %}Your complete membership information{% else %}You are registered — choose a plan when you are ready{% endif %}</p>
     </div>
+
+    {% if not membership.has_active_membership %}
+    <div class="rounded-xl border border-amber-200 bg-amber-50 p-5 mb-6 text-center">
+        <p class="text-sm font-semibold text-amber-900 mb-2">No membership plan yet</p>
+        <p class="text-sm text-amber-800 mb-4 max-w-md mx-auto">Compare gyms and complete checkout whenever you like. Your account stays saved.</p>
+        <a href="{{ url_for('preferences') }}"
+           class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-sky-600 text-white font-bold shadow hover:bg-sky-700 transition">
+            Choose a membership plan
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+    </div>
+    {% endif %}
 
     <!-- Main Card -->
     <article class="rounded-2xl bg-white border border-slate-200 shadow-xl overflow-hidden mb-6">
@@ -65,6 +77,7 @@
                 </div>
             </div>
 
+            {% if membership.has_active_membership %}
             <!-- Gym Plan Section -->
             <div>
                 <h3 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
@@ -136,6 +149,7 @@
                     </p>
                 </div>
             </div>
+            {% endif %}
         </div>
     </article>
 

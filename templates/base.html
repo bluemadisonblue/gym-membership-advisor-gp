@@ -100,6 +100,9 @@
         {% if not (is_admin_page) %}
         <div class="hidden lg:flex lg:gap-x-12">
             <a href="{{ url_for('home') }}" class="text-sm font-semibold leading-6 bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent no-underline hover:no-underline">Home</a>
+            {% if session.get('user_id') and account_needs_plan %}
+            <a href="{{ url_for('preferences') }}" class="text-sm font-semibold leading-6 bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent no-underline hover:no-underline">Choose plan</a>
+            {% endif %}
             <a href="{{ url_for('access') }}" class="text-sm font-semibold leading-6 bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent no-underline hover:no-underline">Access Membership</a>
         </div>
         <div class="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-4 lg:items-center">
@@ -107,7 +110,7 @@
                 <span class="text-sm text-gray-400">{{ session.get('user_name') }}</span>
                 <a href="{{ url_for('logout') }}" class="text-sm font-semibold leading-6 bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent no-underline hover:no-underline">Logout</a>
             {% else %}
-                <a href="{{ url_for('signup') }}" class="text-sm font-semibold leading-6 bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent no-underline hover:no-underline">Sign Up <span aria-hidden="true">→</span></a>
+                <a href="{{ url_for('signup') }}" class="text-sm font-semibold leading-6 bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent no-underline hover:no-underline">Register <span aria-hidden="true">→</span></a>
                 <a href="{{ url_for('login') }}" class="text-sm font-semibold leading-6 bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent no-underline hover:no-underline">Login</a>
             {% endif %}
         </div>
@@ -157,10 +160,13 @@
                         {% if not (is_admin_page) %}
                         <div class="space-y-2 py-6">
                             <a href="{{ url_for('home') }}" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent no-underline hover:no-underline hover:bg-white/5 {% if request.endpoint == 'home' %}bg-white/5{% endif %}">Home</a>
+                            {% if session.get('user_id') and account_needs_plan %}
+                            <a href="{{ url_for('preferences') }}" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent no-underline hover:no-underline hover:bg-white/5 {% if request.endpoint == 'preferences' %}bg-white/5{% endif %}">Choose plan</a>
+                            {% endif %}
                             <a href="{{ url_for('access') }}" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent no-underline hover:no-underline hover:bg-white/5 {% if request.endpoint in ['access','membership_details'] %}bg-white/5{% endif %}">Access Membership</a>
                         </div>
                         <div class="py-6">
-                            <a href="{{ url_for('signup') }}" class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent no-underline hover:no-underline hover:bg-white/5 {% if request.endpoint in ['signup','preferences','recommendation','confirm','pay'] %}bg-white/5{% endif %}">Sign Up</a>
+                            <a href="{{ url_for('signup') }}" class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent no-underline hover:no-underline hover:bg-white/5 {% if request.endpoint in ['signup','preferences','recommendation','confirm','pay'] %}bg-white/5{% endif %}">Register</a>
                             {% if session.get('user_id') %}
                                 <a href="{{ url_for('logout') }}" class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold bg-gradient-to-r from-sky-600 via-sky-500 to-emerald-600 bg-clip-text text-transparent no-underline hover:no-underline hover:bg-white/5">Logout ({{ session.get('user_name') }})</a>
                             {% else %}
@@ -215,7 +221,7 @@
                 <ol class="stepper-list">
                     <li class="stepper-item {% if step >= 1 %}is-done{% endif %} {% if step == 1 %}is-active{% endif %}">
                         <span class="stepper-dot" aria-hidden="true"></span>
-                        <span class="stepper-label">Signup</span>
+                        <span class="stepper-label">Register</span>
                     </li>
                     <li class="stepper-item {% if step >= 2 %}is-done{% endif %} {% if step == 2 %}is-active{% endif %}">
                         <span class="stepper-dot" aria-hidden="true"></span>

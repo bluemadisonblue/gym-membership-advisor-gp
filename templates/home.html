@@ -25,8 +25,8 @@
                     </span>
                 </h1>
                 <p class="mx-auto max-w-2xl text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 leading-relaxed font-medium px-4">
-                    Compare <strong class="text-slate-900">uGym</strong> and <strong class="text-slate-900">Power Zone</strong> side-by-side. 
-                    Get personalized recommendations with automatic discounts and transparent pricing — all in one simple flow.
+                    Register for free, then compare <strong class="text-slate-900">uGym</strong> and <strong class="text-slate-900">Power Zone</strong> whenever you are ready.
+                    Personalized recommendations, automatic discounts, and transparent pricing.
                 </p>
             </div>
 
@@ -34,11 +34,20 @@
             <div class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-2 animate-fade-in animation-delay-400 px-4">
                 <a href="{{ url_for('signup') }}"
                    class="w-full sm:w-auto group inline-flex items-center justify-center gap-2 px-8 sm:px-10 py-3 sm:py-4 rounded-full bg-sky-600 text-white text-base sm:text-lg font-bold shadow-lg hover:bg-sky-700 hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200">
-                    Get Started
+                    Register
                     <svg class="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                     </svg>
                 </a>
+                {% if session.get('user_id') and account_needs_plan %}
+                <a href="{{ url_for('preferences') }}"
+                   class="w-full sm:w-auto group inline-flex items-center justify-center gap-2 px-8 sm:px-10 py-3 sm:py-4 rounded-full border-2 border-emerald-500 bg-emerald-50 text-emerald-900 text-base sm:text-lg font-bold shadow-md hover:bg-emerald-100 active:scale-95 transition-all duration-200">
+                    Choose a plan
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                    </svg>
+                </a>
+                {% endif %}
                 <a href="{{ url_for('access') }}"
                    class="w-full sm:w-auto group inline-flex items-center justify-center gap-2 px-8 sm:px-10 py-3 sm:py-4 rounded-full border-2 border-slate-300 bg-white/90 backdrop-blur text-base sm:text-lg font-bold text-slate-800 hover:bg-white hover:border-slate-400 hover:shadow-lg active:scale-95 transition-all duration-200">
                     <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">

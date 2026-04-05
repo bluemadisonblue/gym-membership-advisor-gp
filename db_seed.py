@@ -15,6 +15,7 @@ def seed_gyms(force: bool = False) -> None:
     db.session.add_all([
         Gym(gym_key="ugym", gym_name="uGym", joining_fee=Decimal("10.00")),
         Gym(gym_key="power_zone", gym_name="Power Zone", joining_fee=Decimal("30.00")),
+        Gym(gym_key="pending", gym_name="Account only (no plan yet)", joining_fee=Decimal("0.00")),
     ])
     db.session.commit()
 

@@ -12,12 +12,15 @@ from flask import (
     url_for,
     flash,
     session,
+    Response,
 )
-from sqlalchemy import inspect, func, case
+from sqlalchemy import inspect, func, case, text
 
 from models import db, Gym, Member, MembershipOption, Discount
+
+PENDING_GYM_KEY = "pending"
 import data
-from pricing import calculate_pricing_for_selection, format_currency, money
+from pricing import calculate_pricing_for_selection, format_currency, hydrate_pricing_result, money
 from db_seed import seed_all_if_empty
 # Get the directory where this script is located
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -45,6 +48,35 @@ db.init_app(app)
 _db_initialized = False
 
 
+def _migrate_members_schema() -> None:
+    """Add has_active_membership for existing SQLite DBs (defaults existing rows to active)."""
+    if db.engine.dialect.name != "sqlite":
+        return
+    rows = db.session.execute(text("PRAGMA table_info(members)")).fetchall()
+    cols = {r[1] for r in rows}
+    if "has_active_membership" in cols:
+        return
+    db.session.execute(
+        text("ALTER TABLE members ADD COLUMN has_active_membership BOOLEAN NOT NULL DEFAULT 1")
+    )
+    db.session.commit()
+
+
+def _ensure_pending_gym_row() -> None:
+    """Placeholder gym for accounts that have not purchased a plan yet."""
+    if db.session.get(Gym, PENDING_GYM_KEY):
+        return
+    db.session.add(
+        Gym(
+            gym_key=PENDING_GYM_KEY,
+            gym_name="Account only (no plan yet)",
+            joining_fee=Decimal("0.00"),
+        )
+    )
+    db.session.commit()
+    data.invalidate_cache()
+
+
 def _ensure_db_ready() -> None:
     """Create tables and seed data once on first request."""
     global _db_initialized
@@ -54,7 +86,10 @@ def _ensure_db_ready() -> None:
     tables = inspector.get_table_names()
     if "gyms" not in tables or "membership_option" not in tables or "discounts" not in tables:
         db.create_all()
+    if "members" in tables:
+        _migrate_members_schema()
     seed_all_if_empty()
+    _ensure_pending_gym_row()
     _db_initialized = True
 
 
@@ -71,10 +106,10 @@ def load_data():
 
 
 def generate_membership_id(gym_key: str) -> str:
-    """Generate a unique membership ID from DB count (safe across restarts)."""
+    """Generate a unique membership ID for an active (paid) membership."""
     year = datetime.now().year
     prefix = "UG" if gym_key == "ugym" else "PZ"
-    seq = Member.query.count() + 1
+    seq = Member.query.filter_by(has_active_membership=True).count() + 1
     return f"{prefix}-{year}-{seq:06d}"
 
 
@@ -89,14 +124,56 @@ def login_required(f):
     return decorated_function
 
 
-def _get_signup_flow():
-    """Return (signup_data, preferences) or (None, None) if incomplete. Redirects on failure."""
-    signup_data = session.get("signup")
+def _signup_data_from_member(member: Member) -> Dict[str, Any]:
+    """Build pricing/signup dict from stored account (no session password)."""
+    return {
+        "full_name": member.full_name,
+        "email": member.email,
+        "age": member.age,
+        "is_student": member.is_student,
+        "is_young_adult": member.is_young_adult,
+        "is_pensioner": member.is_pensioner,
+    }
+
+
+def _get_plan_selection_flow() -> Tuple[
+    Optional[Dict[str, Any]], Optional[Dict[str, Any]], Optional[str]
+]:
+    """
+    Return (signup_data, preferences, error_code).
+    error_code is None on success, or one of: "login", "prefs", "already".
+    """
+    if "user_id" not in session:
+        flash("Please log in to continue. Create an account first if you are new.", "error")
+        return None, None, "login"
+    member = db.session.get(Member, session["user_id"])
+    if not member:
+        flash("Please log in again.", "error")
+        return None, None, "login"
+    if member.has_active_membership:
+        flash("You already have an active membership.", "info")
+        return None, None, "already"
     preferences = session.get("preferences")
-    if not signup_data or not preferences:
-        flash("Please complete the signup and preferences steps first.", "error")
-        return None, None
-    return signup_data, preferences
+    if not preferences:
+        flash("Choose your membership preferences first.", "error")
+        return None, None, "prefs"
+    return _signup_data_from_member(member), preferences, None
+
+
+def _redirect_for_plan_flow_error(code: Optional[str]) -> Optional[Response]:
+    """If error code from _get_plan_selection_flow, return Flask redirect; else None."""
+    if code is None:
+        return None
+    if code == "login":
+        return redirect(url_for("login"))
+    if code == "already":
+        m = db.session.get(Member, session["user_id"])
+        if m:
+            return redirect(url_for("membership_details", membership_id=m.membership_id))
+        return redirect(url_for("home"))
+    if code == "prefs":
+        return redirect(url_for("preferences"))
+    return None
 
 
 def _get_member_for_user(membership_id: str):
@@ -116,6 +193,20 @@ def inject_globals():
     }
 
 
+@app.context_processor
+def inject_account_state():
+    """True when logged in but user has not purchased a plan yet."""
+    if request.endpoint == "static":
+        return {"account_needs_plan": False}
+    uid = session.get("user_id")
+    if not uid:
+        return {"account_needs_plan": False}
+    m = db.session.get(Member, uid)
+    if not m:
+        return {"account_needs_plan": False}
+    return {"account_needs_plan": not m.has_active_membership}
+
+
 @app.route("/")
 def home():
     return render_template("home.html")
@@ -124,6 +215,12 @@ def home():
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     """Handle user signup form submission and display."""
+    if session.get("user_id"):
+        existing = db.session.get(Member, session["user_id"])
+        if existing:
+            flash("You are already logged in.", "info")
+            return redirect(url_for("membership_details", membership_id=existing.membership_id))
+
     # Calculate max date (today - 16 years) for the date picker
     today = date.today()
     max_date = date(today.year - 16, today.month, today.day)
@@ -198,38 +295,72 @@ def signup():
         is_young_adult = age is not None and age < 25
         is_pensioner = age is not None and age > 66
 
-        # Store in session for later steps
-        session["signup"] = {
-            "full_name": full_name,
-            "email": email,
-            "password": password,  # Store temporarily in session, will be hashed when creating member
-            "age": age,
-            "is_student": is_student,
-            "is_young_adult": is_young_adult,
-            "is_pensioner": is_pensioner,
-        }
+        member = Member(
+            membership_id="TEMP",
+            full_name=full_name,
+            email=email,
+            email_verified=True,
+            date_of_birth=date_of_birth,
+            age=age,
+            is_student=is_student,
+            is_young_adult=is_young_adult,
+            is_pensioner=is_pensioner,
+            chosen_gym=PENDING_GYM_KEY,
+            wants_gym=False,
+            gym_band=None,
+            add_swim=False,
+            add_classes=False,
+            add_massage=False,
+            add_physio=False,
+            monthly_total=Decimal("0.00"),
+            joining_fee=Decimal("0.00"),
+            first_payment_total=Decimal("0.00"),
+            has_active_membership=False,
+        )
+        member.set_password(password)
+        db.session.add(member)
+        db.session.flush()
+        year = datetime.now().year
+        member.membership_id = f"REG-{year}-{member.id:06d}"
+        db.session.commit()
 
-        flash("Signup details saved. Please select your membership preferences.", "success")
-        return redirect(url_for("preferences"))
+        session["user_id"] = member.id
+        session["user_email"] = member.email
+        session["user_name"] = member.full_name
+        session.pop("preferences", None)
+        session.pop("chosen_gym", None)
+        session.pop("pricing_result", None)
 
-    # GET: Load saved values if returning to this page
-    saved = session.get("signup", {})
+        flash(
+            "Account created. You can choose a membership plan whenever you are ready from your account or the menu.",
+            "success",
+        )
+        return redirect(url_for("membership_details", membership_id=member.membership_id))
+
     return render_template(
         "signup.html",
         max_date=max_date.isoformat(),
-        full_name=saved.get("full_name", ""),
-        date_of_birth=saved.get("date_of_birth", ""),
-        is_student=saved.get("is_student", False),
+        full_name="",
+        date_of_birth="",
+        is_student=False,
     )
 
 
 @app.route("/preferences", methods=["GET", "POST"])
 def preferences():
     """Handle membership preferences form submission and display."""
-    signup_data = session.get("signup")
-    if not signup_data:
-        flash("Please start by completing the signup form.", "error")
-        return redirect(url_for("signup"))
+    if "user_id" not in session:
+        flash("Log in or register first, then choose your plan when you are ready.", "error")
+        return redirect(url_for("login"))
+
+    member = db.session.get(Member, session["user_id"])
+    if not member:
+        flash("Please log in again.", "error")
+        return redirect(url_for("login"))
+
+    if member.has_active_membership:
+        flash("You already have an active membership.", "info")
+        return redirect(url_for("membership_details", membership_id=member.membership_id))
 
     if request.method == "POST":
         wants_gym = request.form.get("wants_gym") == "yes"
@@ -288,9 +419,10 @@ def preferences():
 @app.route("/recommendation", methods=["GET", "POST"])
 def recommendation():
     """Display gym recommendations and handle gym selection."""
-    signup_data, preferences = _get_signup_flow()
-    if signup_data is None:
-        return redirect(url_for("signup"))
+    signup_data, preferences, flow_err = _get_plan_selection_flow()
+    redir = _redirect_for_plan_flow_error(flow_err)
+    if redir:
+        return redir
 
     pricing_result = calculate_pricing_for_selection(signup_data, preferences)
     session["pricing_result"] = pricing_result
@@ -326,11 +458,13 @@ def recommendation():
 @app.route("/confirm", methods=["GET", "POST"])
 def confirm():
     """Display confirmation page before payment."""
-    signup_data, preferences = _get_signup_flow()
-    if signup_data is None:
-        return redirect(url_for("signup"))
+    signup_data, preferences, flow_err = _get_plan_selection_flow()
+    redir = _redirect_for_plan_flow_error(flow_err)
+    if redir:
+        return redir
 
     pricing_result = session.get("pricing_result") or calculate_pricing_for_selection(signup_data, preferences)
+    pricing_result = hydrate_pricing_result(pricing_result)
     recommended_gym_key = pricing_result["recommended_gym"]
     chosen_gym = session.get("chosen_gym", recommended_gym_key)
 
@@ -357,14 +491,32 @@ def confirm():
 @app.route("/pay", methods=["GET", "POST"])
 def pay():
     """Handle payment processing and membership creation."""
-    signup_data, preferences = _get_signup_flow()
+    if "user_id" not in session:
+        flash("Log in to complete payment.", "error")
+        return redirect(url_for("login"))
+
+    member = db.session.get(Member, session["user_id"])
+    if not member:
+        flash("Please log in again.", "error")
+        return redirect(url_for("login"))
+
+    if member.has_active_membership:
+        flash("You already have an active membership.", "info")
+        return redirect(url_for("membership_details", membership_id=member.membership_id))
+
+    signup_data, preferences, flow_err = _get_plan_selection_flow()
+    redir = _redirect_for_plan_flow_error(flow_err)
+    if redir:
+        return redir
+
     chosen_gym = session.get("chosen_gym")
 
-    if signup_data is None or not chosen_gym:
-        flash("Your session has expired or is incomplete. Please start again.", "error")
-        return redirect(url_for("signup"))
+    if not chosen_gym:
+        flash("Your session has expired or is incomplete. Please choose your plan again.", "error")
+        return redirect(url_for("preferences"))
 
     pricing_result = session.get("pricing_result") or calculate_pricing_for_selection(signup_data, preferences)
+    pricing_result = hydrate_pricing_result(pricing_result)
     if chosen_gym not in pricing_result["gyms"]:
         flash("Invalid gym selection in your session. Please choose again.", "error")
         return redirect(url_for("recommendation"))
@@ -372,54 +524,30 @@ def pay():
     chosen_pricing = pricing_result["gyms"][chosen_gym]
 
     if request.method == "POST":
-        # Simulate payment success and create membership in database
         membership_id = generate_membership_id(chosen_gym)
 
-        # Calculate date_of_birth from age (approximation)
-        today = date.today()
-        age = signup_data['age']
-        date_of_birth = date(today.year - age, today.month, today.day)
-
-        # Create new member in database
         monthly_total = money(chosen_pricing.get("monthly_total_after_discount"))
         joining_fee = money(chosen_pricing.get("joining_fee"))
         first_payment_total = money(joining_fee + monthly_total)
 
-        new_member = Member(
-            membership_id=membership_id,
-            full_name=signup_data['full_name'],
-            email=signup_data['email'],
-            email_verified=True,
-            date_of_birth=date_of_birth,
-            age=signup_data['age'],
-            is_student=signup_data['is_student'],
-            is_young_adult=signup_data.get('is_young_adult', False),
-            is_pensioner=signup_data.get('is_pensioner', False),
-            chosen_gym=chosen_gym,
-            wants_gym=preferences['wants_gym'],
-            gym_band=preferences.get('gym_band'),
-            add_swim=preferences.get('add_swim', False),
-            add_classes=preferences.get('add_classes', False),
-            add_massage=preferences.get('add_massage', False),
-            add_physio=preferences.get('add_physio', False),
-            monthly_total=monthly_total,
-            joining_fee=joining_fee,
-            first_payment_total=first_payment_total
-        )
+        member.membership_id = membership_id
+        member.chosen_gym = chosen_gym
+        member.wants_gym = preferences["wants_gym"]
+        member.gym_band = preferences.get("gym_band")
+        member.add_swim = preferences.get("add_swim", False)
+        member.add_classes = preferences.get("add_classes", False)
+        member.add_massage = preferences.get("add_massage", False)
+        member.add_physio = preferences.get("add_physio", False)
+        member.monthly_total = monthly_total
+        member.joining_fee = joining_fee
+        member.first_payment_total = first_payment_total
+        member.has_active_membership = True
 
-        # Hash and set password
-        new_member.set_password(signup_data['password'])
-
-        db.session.add(new_member)
         db.session.commit()
 
-        # Log user in automatically so they can access membership without entering ID
-        session["user_id"] = new_member.id
-        session["user_email"] = new_member.email
-        session["user_name"] = new_member.full_name
+        session["user_name"] = member.full_name
 
         flash("Payment successful and membership created!", "success")
-        session.pop("signup", None)
         session.pop("preferences", None)
         session.pop("chosen_gym", None)
         session.pop("pricing_result", None)
@@ -491,6 +619,9 @@ def logout():
     session.pop("user_id", None)
     session.pop("user_email", None)
     session.pop("user_name", None)
+    session.pop("preferences", None)
+    session.pop("chosen_gym", None)
+    session.pop("pricing_result", None)
     flash("You have been logged out successfully.", "success")
     return redirect(url_for("home"))
 

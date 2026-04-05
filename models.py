@@ -112,6 +112,9 @@ class Member(db.Model):
     monthly_total = db.Column(db.Numeric(10, 2), nullable=False)
     joining_fee = db.Column(db.Numeric(10, 2), nullable=False)
     first_payment_total = db.Column(db.Numeric(10, 2), nullable=False)
+
+    # False after register-without-plan; True after checkout (real gym + prices set)
+    has_active_membership = db.Column(db.Boolean, nullable=False, default=False)
     
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     
@@ -126,6 +129,41 @@ class Member(db.Model):
     def to_dict(self):
         """Convert member to dictionary format compatible with existing session structure."""
         from data import GYMS
+
+        if not self.has_active_membership:
+            return {
+                "membership_id": self.membership_id,
+                "gym_key": None,
+                "has_active_membership": False,
+                "signup": {
+                    "full_name": self.full_name,
+                    "email": self.email,
+                    "age": self.age,
+                    "is_student": self.is_student,
+                    "is_young_adult": self.is_young_adult,
+                    "is_pensioner": self.is_pensioner,
+                },
+                "email_verified": self.email_verified,
+                "preferences": {
+                    "wants_gym": self.wants_gym,
+                    "gym_band": self.gym_band,
+                    "add_swim": self.add_swim,
+                    "add_classes": self.add_classes,
+                    "add_massage": self.add_massage,
+                    "add_physio": self.add_physio,
+                },
+                "pricing": {
+                    "gym_name": "No plan selected yet",
+                    "gym_plan_label": None,
+                    "wants_gym": False,
+                    "addons": [],
+                    "monthly_total": Decimal("0.00"),
+                    "monthly_total_after_discount": Decimal("0.00"),
+                    "joining_fee": Decimal("0.00"),
+                    "first_payment_total": Decimal("0.00"),
+                },
+                "created_at": self.created_at,
+            }
         
         # Get gym name
         gym_name = GYMS.get(self.chosen_gym, {}).get('name', 'Unknown Gym')
@@ -167,6 +205,7 @@ class Member(db.Model):
         return {
             'membership_id': self.membership_id,
             'gym_key': self.chosen_gym,
+            'has_active_membership': True,
             'signup': {
                 'full_name': self.full_name,
                 'email': self.email,

@@ -27,6 +27,8 @@ def load_gyms_from_db():
 
     GYMS = {}
     for gym in gyms:
+        if gym.gym_key == "pending":
+            continue
         GYMS[gym.gym_key] = gym.to_dict()
 
     return GYMS

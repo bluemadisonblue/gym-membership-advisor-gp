@@ -72,6 +72,54 @@ def format_currency(value: Any) -> str:
     return f"£{money(value):.2f}"
 
 
+_GYM_NUMERIC_KEYS = (
+    "joining_fee",
+    "base_gym_price",
+    "base_discount",
+    "base_final",
+    "addons_total_before_discount",
+    "addons_discount_total",
+    "addons_total_after_discount",
+    "monthly_total_before_discount",
+    "discount_total",
+    "monthly_total_after_discount",
+)
+_ADDON_NUMERIC_KEYS = ("price", "discount", "final_price")
+
+
+def hydrate_pricing_result(pricing_result: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Restore Decimal values after Flask session round-trip.
+
+    Cookie sessions JSON-serialize data; Decimals become strings. Templates and
+    Jinja comparisons (e.g. `> 0`) need real numbers, not strings.
+    """
+    if not pricing_result:
+        return pricing_result
+
+    out: Dict[str, Any] = dict(pricing_result)
+    if "recommended_savings_per_month" in out:
+        out["recommended_savings_per_month"] = money(out["recommended_savings_per_month"])
+
+    gyms: Dict[str, Any] = {}
+    for gym_key, gym in (out.get("gyms") or {}).items():
+        g = dict(gym)
+        for key in _GYM_NUMERIC_KEYS:
+            if key in g:
+                g[key] = money(g[key])
+        addons = []
+        for addon in g.get("addons") or []:
+            a = dict(addon)
+            for key in _ADDON_NUMERIC_KEYS:
+                if key in a:
+                    a[key] = money(a[key])
+            addons.append(a)
+        g["addons"] = addons
+        gyms[gym_key] = g
+    out["gyms"] = gyms
+    return out
+
+
 def get_discount_category(age: int, is_student: bool, is_pensioner_flag: bool) -> Optional[str]:
     """
     Determine which discount category applies.
@@ -156,6 +204,8 @@ def calculate_pricing_for_selection(signup: Dict[str, Any], preferences: Dict[st
     gyms_result: Dict[str, Any] = {}
 
     for gym_key, gym_cfg in data.GYMS.items():
+        if gym_key == "pending":
+            continue
         joining_fee = gym_cfg["joining_fee"]
         discount_rate = get_discount_rate(gym_key, discount_category)
 
