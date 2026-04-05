@@ -20,6 +20,7 @@
 
     <!-- Form Card -->
     <form method="post" class="rounded-2xl bg-white border border-slate-200 shadow-lg p-6 sm:p-8 space-y-6" novalidate>
+        <input type="hidden" name="user_csrf_token" value="{{ user_csrf_token }}">
         <!-- Email Address -->
         <div class="space-y-2">
             <label for="email" class="block text-sm font-bold text-slate-900">

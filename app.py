@@ -1,8 +1,16 @@
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Dict, Any, Optional, Tuple
+import logging
 import os
 from functools import wraps
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    datefmt="%Y-%m-%dT%H:%M:%S",
+)
+logger = logging.getLogger("gym_advisor")
 
 from flask import (
     Flask,
@@ -105,6 +113,35 @@ def load_data():
         data.load_non_discounted_addons_from_db()
 
 
+# ---------------------------------------------------------------------------
+# Simple in-memory login rate limiter (resets on server restart)
+# ---------------------------------------------------------------------------
+from collections import defaultdict
+from datetime import timedelta
+
+_login_failures: Dict[str, list] = defaultdict(list)
+_RATE_LIMIT_WINDOW = timedelta(minutes=15)
+_RATE_LIMIT_MAX = 5
+
+
+def _record_login_failure(ip: str) -> None:
+    now = datetime.utcnow()
+    _login_failures[ip].append(now)
+    # Prune old entries
+    _login_failures[ip] = [t for t in _login_failures[ip] if now - t < _RATE_LIMIT_WINDOW]
+
+
+def _is_rate_limited(ip: str) -> bool:
+    now = datetime.utcnow()
+    recent = [t for t in _login_failures.get(ip, []) if now - t < _RATE_LIMIT_WINDOW]
+    _login_failures[ip] = recent
+    return len(recent) >= _RATE_LIMIT_MAX
+
+
+def _clear_login_failures(ip: str) -> None:
+    _login_failures.pop(ip, None)
+
+
 def generate_membership_id(gym_key: str) -> str:
     """Generate a unique membership ID for an active (paid) membership."""
     year = datetime.now().year
@@ -190,6 +227,7 @@ def inject_globals():
     return {
         "gyms": data.GYMS,
         "format_currency": format_currency,
+        "user_csrf_token": generate_user_csrf_token(),
     }
 
 
@@ -226,6 +264,10 @@ def signup():
     max_date = date(today.year - 16, today.month, today.day)
 
     if request.method == "POST":
+        if not _check_user_csrf():
+            flash("Your session has expired. Please try again.", "error")
+            return redirect(url_for("signup"))
+
         full_name = (request.form.get("full_name") or "").strip()
         email = (request.form.get("email") or "").strip().lower()
         date_of_birth_raw = (request.form.get("date_of_birth") or "").strip()
@@ -363,6 +405,10 @@ def preferences():
         return redirect(url_for("membership_details", membership_id=member.membership_id))
 
     if request.method == "POST":
+        if not _check_user_csrf():
+            flash("Your session has expired. Please try again.", "error")
+            return redirect(url_for("preferences"))
+
         wants_gym = request.form.get("wants_gym") == "yes"
         gym_band = request.form.get("gym_band") if wants_gym else None
 
@@ -429,6 +475,10 @@ def recommendation():
     recommended_gym_key = pricing_result["recommended_gym"]
 
     if request.method == "POST":
+        if not _check_user_csrf():
+            flash("Your session has expired. Please try again.", "error")
+            return redirect(url_for("recommendation"))
+
         chosen_gym = request.form.get("chosen_gym")
         if chosen_gym not in data.GYMS:
             flash("Invalid gym selection. Please choose one of the available gyms.", "error")
@@ -474,6 +524,9 @@ def confirm():
     chosen_pricing = pricing_result["gyms"][chosen_gym]
 
     if request.method == "POST":
+        if not _check_user_csrf():
+            flash("Your session has expired. Please try again.", "error")
+            return redirect(url_for("confirm"))
         # When user clicks "Pay", we simulate payment and move to the payment confirmation page.
         session["chosen_gym"] = chosen_gym
         return redirect(url_for("pay"))
@@ -524,6 +577,10 @@ def pay():
     chosen_pricing = pricing_result["gyms"][chosen_gym]
 
     if request.method == "POST":
+        if not _check_user_csrf():
+            flash("Your session has expired. Please try again.", "error")
+            return redirect(url_for("pay"))
+
         membership_id = generate_membership_id(chosen_gym)
 
         monthly_total = money(chosen_pricing.get("monthly_total_after_discount"))
@@ -544,6 +601,7 @@ def pay():
         member.has_active_membership = True
 
         db.session.commit()
+        logger.info("Membership created: %s (gym=%s, monthly=£%s)", membership_id, chosen_gym, monthly_total)
 
         session["user_name"] = member.full_name
 
@@ -580,11 +638,15 @@ def success(membership_id: str):
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
+        if not _check_user_csrf():
+            flash("Your session has expired. Please try again.", "error")
+            return redirect(url_for("login"))
+
         email = (request.form.get("email") or "").strip().lower()
         password = (request.form.get("password") or "").strip()
-        
+
         errors = []
-        
+
         if not email:
             errors.append("Email address is required.")
         
@@ -596,18 +658,30 @@ def login():
                 flash(msg, "error")
             return render_template("login.html", email=email)
         
+        client_ip = request.remote_addr or "unknown"
+
+        if _is_rate_limited(client_ip):
+            logger.warning("Login rate-limited for IP %s (email attempt: %s)", client_ip, email)
+            flash("Too many failed login attempts. Please wait 15 minutes before trying again.", "error")
+            return render_template("login.html", email=email)
+
         # Find member by email
         member = Member.query.filter_by(email=email).first()
-        
+
         if not member or not member.check_password(password):
+            _record_login_failure(client_ip)
+            logger.warning("Failed login attempt for email=%s from IP=%s", email, client_ip)
             flash("Invalid email or password. Please try again.", "error")
             return render_template("login.html", email=email)
-        
+
+        _clear_login_failures(client_ip)
+        logger.info("Successful login for member id=%s from IP=%s", member.id, client_ip)
+
         # Set session to logged in
         session["user_id"] = member.id
         session["user_email"] = member.email
         session["user_name"] = member.full_name
-        
+
         flash(f"Welcome back, {member.full_name}!", "success")
         return redirect(url_for("membership_details", membership_id=member.membership_id))
     
@@ -660,8 +734,17 @@ def not_found(error):
 
 from admin_auth import (
     require_admin, is_admin_logged_in, verify_password,
-    ADMIN_USERNAME, ADMIN_PASSWORD_HASH, log_admin_action, generate_csrf_token, verify_csrf_token
+    ADMIN_USERNAME, ADMIN_PASSWORD_HASH, log_admin_action,
+    generate_csrf_token, verify_csrf_token,
+    generate_user_csrf_token, verify_user_csrf_token,
 )
+
+
+def _check_user_csrf() -> bool:
+    """Return True when the request passes CSRF validation (or app is in test mode)."""
+    if app.config.get("TESTING"):
+        return True
+    return verify_user_csrf_token(request.form.get("user_csrf_token", ""))
 
 
 @app.route("/admin/login", methods=["GET", "POST"])
@@ -890,5 +973,6 @@ def inject_admin_context():
 if __name__ == "__main__":
     # Debug mode is convenient during development; disable in production.
     # Use port 5001 to avoid conflict with AirPlay on macOS
-    app.run(debug=True, port=5001)
+    port = int(os.environ.get("PORT", 5001))
+    app.run(debug=True, port=port)
 

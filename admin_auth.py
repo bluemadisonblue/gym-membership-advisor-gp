@@ -5,11 +5,14 @@ This module provides simple password-based authentication for admin access.
 For production, consider using more robust authentication (OAuth, 2FA, etc.)
 """
 
+import logging
 import os
 import hashlib
 import secrets
 from functools import wraps
 from flask import session, redirect, url_for, flash
+
+logger = logging.getLogger("gym_advisor.admin")
 
 
 # Admin credentials (set via environment variables)
@@ -48,15 +51,27 @@ def require_admin(f):
 
 
 def generate_csrf_token() -> str:
-    """Generate a CSRF token for forms."""
+    """Generate a CSRF token for admin forms."""
     if "csrf_token" not in session:
         session["csrf_token"] = secrets.token_hex(32)
     return session["csrf_token"]
 
 
 def verify_csrf_token(token: str) -> bool:
-    """Verify a CSRF token."""
+    """Verify an admin CSRF token."""
     return token == session.get("csrf_token")
+
+
+def generate_user_csrf_token() -> str:
+    """Generate a CSRF token for user-facing forms."""
+    if "user_csrf_token" not in session:
+        session["user_csrf_token"] = secrets.token_hex(32)
+    return session["user_csrf_token"]
+
+
+def verify_user_csrf_token(token: str) -> bool:
+    """Verify a user CSRF token."""
+    return bool(token) and token == session.get("user_csrf_token")
 
 
 def generate_admin_password_hash(password: str):
@@ -67,7 +82,7 @@ def generate_admin_password_hash(password: str):
     python3 -c "from admin_auth import generate_admin_password_hash; generate_admin_password_hash('your_password')"
     """
     password_hash = hash_password(password)
-    print(f"\nPassword Hash for '{password}':")
+    print(f"\nPassword Hash for '{password}':")  # intentional stdout for CLI helper
     print(password_hash)
     print("\nSet this as ADMIN_PASSWORD_HASH environment variable:")
     print(f"export ADMIN_PASSWORD_HASH='{password_hash}'")
@@ -82,12 +97,11 @@ def log_admin_action(action: str, details: str = ""):
     username = session.get("admin_username", "unknown")
     ip_address = session.get("admin_ip", "unknown")
     
-    log_entry = f"[{timestamp}] ADMIN: {username} ({ip_address}) - {action}"
+    log_entry = f"ADMIN: {username} ({ip_address}) - {action}"
     if details:
         log_entry += f" - {details}"
-    
-    # In production, write to a secure log file or logging service
-    print(log_entry)
+
+    logger.info(log_entry)
     
     # TODO: Consider adding database logging for audit trail
     # AdminLog.create(

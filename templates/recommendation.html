@@ -42,6 +42,7 @@
 
 <!-- Pricing Cards -->
 <form method="post" class="mb-8">
+    <input type="hidden" name="user_csrf_token" value="{{ user_csrf_token }}">
     <div class="grid md:grid-cols-2 gap-6 sm:gap-8 max-w-6xl mx-auto">
         {% for gym_key, gym_data in pricing.gyms.items() %}
             {% set is_recommended = (gym_key == recommended_gym) %}

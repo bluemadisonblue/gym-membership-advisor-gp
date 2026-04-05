@@ -24,6 +24,7 @@
         <!-- Form Column -->
         <div>
             <form method="post" class="space-y-6" novalidate data-preferences-form>
+                <input type="hidden" name="user_csrf_token" value="{{ user_csrf_token }}">
                 <!-- Gym Membership Section -->
                 <div class="rounded-2xl bg-white border border-slate-200 shadow-lg p-6 sm:p-8 hover:shadow-xl transition-shadow">
                     <div class="flex items-center gap-3 mb-6">
